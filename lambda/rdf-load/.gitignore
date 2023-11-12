@@ -1,0 +1,8 @@
+.venv/
+poetry.lock
+dist/
+artifact.zip
+.package/
+.pytest_cache/
+event2.json
+/brew-install-script.sh

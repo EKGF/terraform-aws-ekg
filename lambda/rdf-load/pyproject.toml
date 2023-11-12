@@ -1,0 +1,40 @@
+[project]
+name = "lambda_function"
+version = "0.1.0"
+description = ""
+authors = [
+    { author = "Jacobus Geluk", email = "jacobus.geluk@ekgf.org" },
+]
+readme = "README.md"
+
+[tool.poetry]
+name = "lambda_function"
+version = "0.1.0"
+description = ""
+authors = ["Jacobus Geluk", "jacobus.geluk@ekgf.org"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12.0"
+requests = "2.26.0"
+
+[tool.poetry.dev-dependencies]
+boto3 = "1.28.49"
+botocore = "1.31.49"
+pytest-mock = "3.7.0"
+moto = "3.0.2"
+requests = "2.26.0"
+aws-xray-sdk = "2.4.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[experimental]
+new-installer = true
+
+[tool.poetry.scripts]
+lambda_rdf_load = "lambda.rdf_load.lambda_function:lambda_handler"
+
+[virtualenv]
+in-project = true
+
