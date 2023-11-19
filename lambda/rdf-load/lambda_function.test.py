@@ -28,7 +28,7 @@ class TestFunction(unittest.TestCase):
             logger.warning('## EVENT')
             logger.warning(jsonpickle.encode(event))
             os.environ[
-                "neptune_staging_endpoint"] = "ekgf-dt-dev-staging.cluster-ckvyb9qgnfdp.eu-west-2.neptune.amazonaws.com"
+                "neptune_endpoint"] = "ekgf-dt-dev-staging.cluster-ckvyb9qgnfdp.eu-west-2.neptune.amazonaws.com"
             os.environ["neptune_port"] = "8182"
             os.environ["neptune_s3_iam_role_arn"] = "arn:aws:iam::457852604093:role/ekgf-dt-dev-neptune"
             os.environ["AWS_LAMBDA_LOG_GROUP_NAME"] = "/aws/lambda/rdf-load"

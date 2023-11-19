@@ -33,12 +33,12 @@ def check_neptune_endpoint(host_name, port):
             }
 
 
-def send_upload_reguest(neptune_staging_endpoint, neptune_port, load_request):
-    url = f"https://{neptune_staging_endpoint}:{str(neptune_port)}/loader"
+def send_upload_reguest(neptune_endpoint, neptune_port, load_request):
+    url = f"https://{neptune_endpoint}:{str(neptune_port)}/loader"
 
     print(f"## Neptune endpoint: {url}")
 
-    result = check_neptune_endpoint(neptune_staging_endpoint, int(neptune_port))
+    result = check_neptune_endpoint(neptune_endpoint, int(neptune_port))
     if result is not None:
         return result
 
@@ -98,7 +98,7 @@ def lambda_handler(event, context):
 
     aws_lambda_log_group_name = os.environ["AWS_LAMBDA_LOG_GROUP_NAME"]
     aws_lambda_log_stream_name = os.environ["AWS_LAMBDA_LOG_GROUP_NAME"]
-    neptune_staging_endpoint = os.environ["neptune_staging_endpoint"]
+    neptune_endpoint = os.environ["neptune_endpoint"]
     neptune_port = os.environ["neptune_port"]
     neptune_s3_iam_role_arn = os.environ["neptune_s3_iam_role_arn"]
 
@@ -107,7 +107,7 @@ def lambda_handler(event, context):
     print("## ENVIRONMENT VARIABLES")
     print(f"AWS_LAMBDA_LOG_GROUP_NAME  = {aws_lambda_log_group_name}")
     print(f"AWS_LAMBDA_LOG_STREAM_NAME = {aws_lambda_log_stream_name}")
-    print(f"neptune_staging_endpoint   = {neptune_staging_endpoint}")
+    print(f"neptune_endpoint           = {neptune_endpoint}")
     print(f"neptune_port               = {neptune_port}")
     print(f"neptune_s3_iam_role_arn    = {neptune_s3_iam_role_arn}")
     print(f"## EVENT = {event}")
@@ -249,6 +249,6 @@ def lambda_handler(event, context):
     print(f"## Load request: {load_request}")
     # pprint.pprint(load_request)
 
-    result = send_upload_reguest(neptune_staging_endpoint, neptune_port, load_request)
+    result = send_upload_reguest(neptune_endpoint, neptune_port, load_request)
     print(f"## Result: {result}")
     return result

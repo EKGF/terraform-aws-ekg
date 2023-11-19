@@ -15,4 +15,7 @@ locals {
   }
 
   permissions_boundary = var.iam_permissions_boundary == null ? null : "arn:aws:iam::${var.aws_account_id}:policy/${var.iam_permissions_boundary}"
+
+  rdf_load_path = "${path.module}/lambda/rdf-load"
+  rdf_load_zip  = "${local.rdf_load_path}/artifact.zip"
 }
