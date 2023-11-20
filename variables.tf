@@ -84,8 +84,8 @@ variable "neptune_cluster_subnet_ids" {
 }
 
 variable "neptune_cluster_security_group_ids" {
-  type        = list(string)
-  description = "List of security group IDs for Neptune cluster"
+  type        = set(string)
+  description = "Set of security group IDs for Neptune cluster"
   default     = null
 }
 
