@@ -3,7 +3,7 @@
 # Build artifact.zip for the AWS Lambda.
 #
 
-log_file=$(mktemp -t build.log.)
+log_file=$(mktemp -t build.log.XXXX)
 # save stdout and stderr to file descriptors 3 and 4, then redirect them to "foo"
 exec 3>&1 4>&2 >${log_file} 2>&1
 
