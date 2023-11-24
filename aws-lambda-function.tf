@@ -25,7 +25,7 @@ resource "aws_lambda_function" "rdf_load" {
   depends_on = [
     aws_cloudwatch_log_group.lambda_log_group_rdf_load,
     #    data.external.execute_build,
-    data.archive_file.artifact_zip
+    data.archive_file.artifact_zip,
   ]
 
   tags = local.default_tags

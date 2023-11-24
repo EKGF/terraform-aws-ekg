@@ -3,7 +3,7 @@ resource "null_resource" "artifact_zip" {
     main      = base64sha256(file("${local.rdf_load_path}/lambda_function.py"))
     test      = base64sha256(file("${local.rdf_load_path}/lambda_function.test.py"))
     pyproject = base64sha256(file("${local.rdf_load_path}/pyproject.toml"))
-    #    always_run = "${timestamp()}"
+    always_run = timestamp()
   }
 
   provisioner "local-exec" {
@@ -19,23 +19,16 @@ resource "null_resource" "artifact_zip" {
   }
 }
 
-#data "external" "execute_build" {
-#  program     = ["/usr/local/bin/bash", "-c", "./build.sh"]
-#  working_dir = local.rdf_load_path
-#}
-
 data "archive_file" "artifact_zip" {
   depends_on       = [null_resource.artifact_zip]
-  #  depends_on  = [data.external.execute_build]
   type             = "zip"
-  source_dir       = local.rdf_load_path
-  #    source_dir  = "${path.module}/lambda/rdf-load"
-  output_path      = "${path.module}/lambda/rdf-load/artifact.zip"
-  #  output_path = data.external.execute_build.result["zip_file"]
+  source_dir       = "${local.rdf_load_path}/.package"
+  output_path      = local.artifact_zip
   output_file_mode = "0666"
 }
 
 output "artifact_zip" {
+#  value = data.local_file.artifact_zip.filename
   value = data.archive_file.artifact_zip.output_path
 }
 
