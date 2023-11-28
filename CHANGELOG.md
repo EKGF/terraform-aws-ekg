@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.6](https://github.com/EKGF/terraform-neptune/compare/0.0.5..0.0.6) - 2023-11-28
+#### Refactoring
+- **(rdf-load)** added new env vars - ([cd46ea0](https://github.com/EKGF/terraform-neptune/commit/cd46ea021a21411d63bd9e53bde6b115c5d3d615)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.5](https://github.com/EKGF/terraform-neptune/compare/0.0.4..0.0.5) - 2023-11-24
 #### Bug Fixes
 - **(build)** Fixed building of python code - ([b1bfb1b](https://github.com/EKGF/terraform-neptune/commit/b1bfb1be691f644d1c638e182d3ae850ede3047e)) - [@jgeluk](https://github.com/jgeluk)
