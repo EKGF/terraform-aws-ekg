@@ -98,3 +98,85 @@ variable "tags" {
     "environment" = "dev"
   }
 }
+
+variable "ekg_base_placeholder" {
+  description = "The placeholder for the EKG base URL"
+  type        = string
+  default     = "https://placeholder.kg"
+}
+
+variable "ekg_id_base_placeholder" {
+  description = "The base placeholder URL for EKG IDs"
+  type        = string
+  default     = "https://placeholder.kg/id"
+}
+
+variable "ekg_graph_base_placeholder" {
+  description = "The base placeholder URL for EKG Graph IDs"
+  type        = string
+  default     = "https://placeholder.kg/graph"
+}
+
+variable "ekg_base_internal" {
+  description = "The placeholder for the EKG base URL"
+  type        = string
+  default     = "https://placeholder.kg"
+}
+
+variable "ekg_id_base_internal" {
+  description = "The base placeholder URL for EKG IDs"
+  type        = string
+  default     = "https://placeholder.kg/id"
+}
+
+variable "ekg_graph_base_internal" {
+  description = "The base placeholder URL for EKG Graph IDs"
+  type        = string
+  default     = "https://placeholder.kg/graph"
+}
+
+variable "ekg_ontology_base_internal" {
+  description = "The base placeholder URL for the organization's own Ontology IRIs"
+  type        = string
+  default     = "https://placeholder.kg/ontology"
+}
+
+variable "ekg_base_external" {
+  description = "The EKG base URL"
+  type        = string
+}
+
+variable "ekg_id_base_external" {
+  description = "The base URL for EKG IDs"
+  type        = string
+}
+
+variable "ekg_graph_base_external" {
+  description = "The base URL for EKG Graph IDs"
+  type        = string
+}
+
+variable "ekg_ontology_base_external" {
+  description = "The base URL for the organization's own Ontology IRIs"
+  type        = string
+}
+
+variable "ekg_api_base" {
+  description = "The base URL for the EKG API"
+  type        = string
+}
+
+variable "ekg_sparql_health_endpoint" {
+  description = "The URL for the SPARQL health endpoint, used to check for a 200 status"
+  type        = string
+}
+
+variable "ekg_sparql_query_endpoint" {
+  description = "The URL for the SPARQL query endpoint (used for ASK, SELECT or CONSTRUCT statements)"
+  type        = string
+}
+
+variable "ekg_sparql_update_endpoint" {
+  description = "The URL for the SPARQL update endpoint (used for INSERT/UPDATE/DELETE, DROP, or LOAD)"
+  type        = string
+}

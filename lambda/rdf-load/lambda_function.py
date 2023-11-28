@@ -102,6 +102,22 @@ def lambda_handler(event, context):
     neptune_port = os.environ["neptune_port"]
     neptune_s3_iam_role_arn = os.environ["neptune_s3_iam_role_arn"]
 
+    ekg_base_internal = os.environ["EKG_BASE_INTERNAL"]
+    ekg_id_base_internal = os.environ["EKG_ID_BASE_INTERNAL"]
+    ekg_graph_base_internal = os.environ["EKG_GRAPH_BASE_INTERNAL"]
+    ekg_ontology_base_internal = os.environ["EKG_ONTOLOGY_BASE_INTERNAL"]
+
+    ekg_base_external = os.environ["EKG_BASE_EXTERNAL"]
+    ekg_id_base_external = os.environ["EKG_ID_BASE_EXTERNAL"]
+    ekg_graph_base_external = os.environ["EKG_GRAPH_BASE_EXTERNAL"]
+    ekg_ontology_base_external = os.environ["EKG_ONTOLOGY_BASE_EXTERNAL"]
+
+    ekg_api_base = os.environ["EKG_API_BASE"]
+
+    ekg_sparql_health_endpoint = os.environ["EKG_SPARQL_HEALTH_ENDPOINT"]
+    ekg_sparql_query_endpoint = os.environ["EKG_SPARQL_QUERY_ENDPOINT"]
+    ekg_sparql_update_endpoint = os.environ["EKG_SPARQL_UPDATE_ENDPOINT"]
+
     # TODO: Add error handling
 
     print("## ENVIRONMENT VARIABLES")
@@ -110,6 +126,23 @@ def lambda_handler(event, context):
     print(f"neptune_endpoint           = {neptune_endpoint}")
     print(f"neptune_port               = {neptune_port}")
     print(f"neptune_s3_iam_role_arn    = {neptune_s3_iam_role_arn}")
+    #
+    print(f"EKG_BASE_INTERNAL          = {ekg_base_internal}")
+    print(f"EKG_ID_BASE_INTERNAL       = {ekg_id_base_internal}")
+    print(f"EKG_GRAPH_BASE_INTERNAL    = {ekg_graph_base_internal}")
+    print(f"EKG_ONTOLOGY_BASE_INTERNAL = {ekg_ontology_base_internal}")
+    #
+    print(f"EKG_BASE_EXTERNAL          = {ekg_base_external}")
+    print(f"EKG_ID_BASE_EXTERNAL       = {ekg_id_base_external}")
+    print(f"EKG_GRAPH_BASE_EXTERNAL    = {ekg_graph_base_external}")
+    print(f"EKG_ONTOLOGY_BASE_EXTERNAL = {ekg_ontology_base_external}")
+    #
+    print(f"EKG_API_BASE               = {ekg_api_base}")
+    #
+    print(f"EKG_SPARQL_HEALTH_ENDPOINT = {ekg_sparql_health_endpoint}")
+    print(f"EKG_SPARQL_QUERY_ENDPOINT  = {ekg_sparql_query_endpoint}")
+    print(f"EKG_SPARQL_UPDATE_ENDPOINT = {ekg_sparql_update_endpoint}")
+
     print(f"## EVENT = {event}")
     # print("## EVENT")
     # pprint.pprint(event)
@@ -237,9 +270,10 @@ def lambda_handler(event, context):
         "failOnError": "TRUE",
         "parallelism": "HIGH",
         "parserConfiguration": {
-            "baseUri": "https://ekgf.org/id/",  # TODO: Make configurable
-            # "namedGraphUri" : "http://ekgf.org/graph/all-data" # TODO: Change to dataset name
-            "namedGraphUri": "http://aws.amazon.com/neptune/vocab/v01/DefaultNamedGraph"  # TODO: Change to dataset name
+            "baseUri": f"{ekg_id_base_internal}/",
+            # Just load the whole file into its own named graph for provenance reasons,
+            # triggered processes will transform and move it to more appropriate named graphs
+            "namedGraphUri": s3_uri
         },
         "updateSingleCardinalityProperties": "FALSE",
         "queueRequest": "TRUE",

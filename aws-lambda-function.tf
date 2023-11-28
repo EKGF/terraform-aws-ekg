@@ -10,10 +10,27 @@ resource "aws_lambda_function" "rdf_load" {
 
   environment {
     variables = {
-      neptune_endpoint         = var.sparql_update_endpoint_host
-      neptune_port             = var.sparql_update_endpoint_port
-      neptune_s3_iam_role_arn  = var.neptune_s3_iam_role_arn
-      neptune_s3_bucket_region = var.aws_region
+      neptune_endpoint           = var.sparql_update_endpoint_host
+      neptune_port               = var.sparql_update_endpoint_port
+      //
+      EKG_BASE_INTERNAL          = var.ekg_base_internal
+      EKG_ID_BASE_INTERNAL       = var.ekg_id_base_internal
+      EKG_GRAPH_BASE_INTERNAL    = var.ekg_graph_base_internal
+      EKG_ONTOLOGY_BASE_INTERNAL = var.ekg_ontology_base_internal
+      //
+      EKG_BASE_EXTERNAL          = var.ekg_base_external
+      EKG_ID_BASE_EXTERNAL       = var.ekg_id_base_external
+      EKG_GRAPH_BASE_EXTERNAL    = var.ekg_graph_base_external
+      EKG_ONTOLOGY_BASE_EXTERNAL = var.ekg_ontology_base_external
+      //
+      EKG_API_BASE               = var.ekg_api_base
+      //
+      EKG_SPARQL_HEALTH_ENDPOINT = var.ekg_sparql_health_endpoint
+      EKG_SPARQL_QUERY_ENDPOINT  = var.ekg_sparql_query_endpoint
+      EKG_SPARQL_UPDATE_ENDPOINT = var.ekg_sparql_update_endpoint
+      //
+      neptune_s3_iam_role_arn    = var.neptune_s3_iam_role_arn
+      neptune_s3_bucket_region   = var.aws_region
     }
   }
 
