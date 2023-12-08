@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.7](https://github.com/EKGF/terraform-neptune/compare/0.0.6..0.0.7) - 2023-12-08
+#### Refactoring
+- **(rdf-load)** aws step function works now - ([ce2a737](https://github.com/EKGF/terraform-neptune/commit/ce2a737c05ff2e570f4a857003d28da7176e4b8b)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.6](https://github.com/EKGF/terraform-neptune/compare/0.0.5..0.0.6) - 2023-11-28
 #### Refactoring
 - **(rdf-load)** added new env vars - ([cd46ea0](https://github.com/EKGF/terraform-neptune/commit/cd46ea021a21411d63bd9e53bde6b115c5d3d615)) - [@jgeluk](https://github.com/jgeluk)
