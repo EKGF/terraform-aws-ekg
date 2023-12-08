@@ -1,8 +1,8 @@
-resource "aws_lambda_function" "rdf_load" {
-  function_name    = "${local.prefix}-rdf-load"
-  filename         = data.archive_file.artifact_zip.output_path
-  source_code_hash = data.archive_file.artifact_zip.output_base64sha256
-  role             = aws_iam_role.lambda_rdf_load.arn
+resource "aws_lambda_function" "check" {
+  function_name    = local.lambda_check_name
+  filename         = data.archive_file.check.output_path
+  source_code_hash = data.archive_file.check.output_base64sha256
+  role             = aws_iam_role.lfn_invoke.arn
   runtime          = "python3.11"
   handler          = "lambda_function.lambda_handler"
   timeout          = 10 * 60
@@ -10,8 +10,6 @@ resource "aws_lambda_function" "rdf_load" {
 
   environment {
     variables = {
-      neptune_endpoint           = var.sparql_update_endpoint_host
-      neptune_port               = var.sparql_update_endpoint_port
       //
       EKG_BASE_INTERNAL          = var.ekg_base_internal
       EKG_ID_BASE_INTERNAL       = var.ekg_id_base_internal
@@ -25,6 +23,7 @@ resource "aws_lambda_function" "rdf_load" {
       //
       EKG_API_BASE               = var.ekg_api_base
       //
+      EKG_SPARQL_LOADER_ENDPOINT = var.ekg_sparql_loader_endpoint
       EKG_SPARQL_HEALTH_ENDPOINT = var.ekg_sparql_health_endpoint
       EKG_SPARQL_QUERY_ENDPOINT  = var.ekg_sparql_query_endpoint
       EKG_SPARQL_UPDATE_ENDPOINT = var.ekg_sparql_update_endpoint
@@ -40,18 +39,9 @@ resource "aws_lambda_function" "rdf_load" {
   }
 
   depends_on = [
-    aws_cloudwatch_log_group.lambda_log_group_rdf_load,
-    #    data.external.execute_build,
-    data.archive_file.artifact_zip,
+    aws_cloudwatch_log_group.lfn_check,
+    data.archive_file.check,
   ]
 
   tags = local.default_tags
-}
-
-resource "aws_lambda_permission" "allow_sns_invoke" {
-  statement_id  = "AllowExecutionFromSNS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.rdf_load.function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic.rdf_load.arn
 }

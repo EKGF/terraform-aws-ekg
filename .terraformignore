@@ -1,4 +1,9 @@
 .github/
+.make/
+.oxigraph/
+.tmp/
 CHANGELOG.md
 cog.toml
 .gitignore
+.sops-variables.mk
+

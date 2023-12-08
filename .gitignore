@@ -1,1 +1,7 @@
 .idea/
+.tmp/
+.oxigraph/
+.make/
+.sops-variables.mk
+.env.local
+

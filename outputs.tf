@@ -1,5 +1,9 @@
-output "lambda_rdf_load_arn" {
-  value = aws_lambda_function.rdf_load.qualified_arn
+output "lambda_invoke_arn" {
+  value = aws_lambda_function.invoke.qualified_arn
+}
+
+output "lambda_load_arn" {
+  value = aws_lambda_function.load.qualified_arn
 }
 
 output "sns_topic_rdf_load_arn" {

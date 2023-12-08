@@ -59,18 +59,6 @@ variable "vpc_name" {
   default     = "digital-twin"
 }
 
-variable "sparql_update_endpoint_host" {
-  type        = string
-  description = "SPARQL endpoint URL"
-  default     = null
-}
-
-variable "sparql_update_endpoint_port" {
-  type        = number
-  description = "SPARQL endpoint port"
-  default     = null
-}
-
 variable "neptune_s3_iam_role_arn" {
   type        = string
   description = "ARN of the IAM role that Neptune uses to access S3"
@@ -166,6 +154,17 @@ variable "ekg_api_base" {
   type        = string
 }
 
+variable "ekg_sparql_loader_endpoint" {
+  description = <<-EOT
+    The URL for the triple-store's loader endpoint,
+    this is non-standardized, currently only works for Neptune.
+    In future versions, if this loader endpoint is equal to the
+    SPARQL update endpoint, we will load the S3 file via the
+    SPARQL LOAD statement.
+  EOT
+  type        = string
+}
+
 variable "ekg_sparql_health_endpoint" {
   description = "The URL for the SPARQL health endpoint, used to check for a 200 status"
   type        = string
@@ -179,4 +178,22 @@ variable "ekg_sparql_query_endpoint" {
 variable "ekg_sparql_update_endpoint" {
   description = "The URL for the SPARQL update endpoint (used for INSERT/UPDATE/DELETE, DROP, or LOAD)"
   type        = string
+}
+
+variable "python_bin" {
+  description = "The path to the python binary"
+  type        = string
+  default     = "python3"
+}
+
+variable "poetry_bin" {
+  description = "The path to the poetry binary"
+  type        = string
+  default     = "poetry"
+}
+
+variable "zip_bin" {
+  description = "The path to the zip binary"
+  type        = string
+  default     = "zip"
 }

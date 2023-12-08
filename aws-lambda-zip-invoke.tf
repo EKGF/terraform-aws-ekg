@@ -1,0 +1,32 @@
+resource "null_resource" "invoke" {
+  triggers = {
+    main       = base64sha256(file("${local.lambda_invoke_path}/lambda_function.py"))
+    test       = base64sha256(file("${local.lambda_invoke_path}/lambda_function.test.py"))
+    pyproject  = base64sha256(file("${local.lambda_invoke_path}/pyproject.toml"))
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command     = "./build.sh"
+    interpreter = ["bash", "-c"]
+    working_dir = local.lambda_invoke_path
+
+    environment = {
+      POETRY_BIN = var.poetry_bin
+      PYTHON_BIN = var.python_bin
+      ZIP_BIN    = var.zip_bin
+    }
+  }
+}
+
+data "archive_file" "invoke" {
+  depends_on       = [null_resource.invoke]
+  type             = "zip"
+  source_dir       = local.lambda_invoke_package_path
+  output_path      = local.lambda_invoke_zip
+  output_file_mode = "0666"
+}
+
+output "lambda_invoke_zip" {
+  value = data.archive_file.invoke.output_path
+}

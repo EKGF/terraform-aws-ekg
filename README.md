@@ -2,8 +2,12 @@
 
 Load RDF files (.nt or .ttl files only for now) from a given S3 bucket into AWS Neptune.
 
-The [`rdf_load` lambda function](./lambda/rdf-load/README.md) in this repository picks up the S3 ObjectCreated
-event and passes the S3 file to the Neptune loader service.
+The [`invoke` lambda function](./lambda/invoke/README.md) in this repository picks
+up the S3 ObjectCreated event and passes it to an AWS Step Function that orchestrates
+the loading of the given RDF file into Neptune.
+
+The [`load` lambda function](./lambda/load/README.md) in this repository gets called
+by the Step Function and instructs the Neptune bulk loader to load the given S3 file.
 
 ## Other documentation
 
@@ -12,17 +16,20 @@ event and passes the S3 file to the Neptune loader service.
 
 ## Things to improve
 
-- The Python code in the lambda function is not very robust. It should be improved to handle errors better.
-- The lambda function should be able to handle multiple files per incoming SNS event.
-- The lambda function should be able to handle multiple S3 buckets.
-    - This is already possible but since we probably end up with different access policies for these input buckets
-      anyway, each bucket should have its own lambda function with just access to that single bucket.
-- The code for the lambda function should only be built once.
+- [ ] Move the code for the lambda's to the
+  [ekglib](https://github.com/EKGF/ekglib) library.
+  The code for the lambda functions should only be built once.
     - Currently, the code is built for each deployment of the rdf-load module.
-    - This is not a big problem since the code is small and the build is fast, but it should be improved.
-        - The code is built using the `build.sh` script in the `lambda/rdf-load` directory and usually takes <3s
-    - The code should be built once and then uploaded to S3 and referenced from there by the lambda function.
-    - One option is to publish the python code as a package to Pypi.org and then reference it from there.
-        - This would still require a small wrapper python script to be built as "artifact.zip"
-        - Ideally, the whole artifact.zip file itself would be published to Pypi.org or some other public accessible
-          place and referenced from there.
+        - This is not a big problem since the code is small and the build is
+          fast, but it should be improved. It also requires Python and Poetry etc
+          to be installed on the machine that runs the terraform code.
+        - The code is built using the `build.sh` script in each directory
+          under `lambda/` and usually takes <3s
+- [ ] Create a mockup server that mimics the Neptune loader service
+  so that we can run the test
+- [ ] The Python code in the lambda functions is currently not very robust.
+  It should be improved to handle errors better.
+- [ ] Reduce the amount of logging down to the essentials
+- [ ] Support Excel files, run them through a lambda function that
+  converts them to "Raw RDF" files using
+  [the XlsxParser in the ekglib library](https://github.com/EKGF/ekglib/tree/main/ekglib/xlsx_parser)

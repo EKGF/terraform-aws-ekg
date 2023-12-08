@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "s3_to_sns" {
     sid       = "Allow S3 to publish RDF load events to SNS"
     effect    = "Allow"
     actions   = ["SNS:Publish"]
-    resources = ["arn:aws:sns:*:*:${local.full_name}"]
+    resources = ["arn:aws:sns:*:*:${local.sns_topic}"]
 
     principals {
       type        = "Service"
@@ -22,9 +22,7 @@ data "aws_iam_policy_document" "s3_to_sns" {
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = [
-        aws_s3_bucket.source_data.arn
-      ]
+      values   = [aws_s3_bucket.source_data.arn]
     }
   }
 }
