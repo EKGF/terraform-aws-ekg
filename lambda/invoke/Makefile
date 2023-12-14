@@ -1,16 +1,18 @@
 
+.PHONY: clean
+clean:
+	-@rm -rf .package dist .pytest_cache
 
 .PHONY: install
 install:
 	poetry install
-
 
 .PHONY: test
 test: install
 	poetry run python lambda_function.test.py
 
 .PHONE: build
-build:
+build: install
 	poetry build
 
 .PHONY: package

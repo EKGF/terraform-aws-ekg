@@ -25,15 +25,15 @@ locals {
   lambda_load_name         = "${local.full_name}-load"
   lambda_load_path         = "${path.module}/lambda/load"
   lambda_load_package_path = "${local.lambda_load_path}/.package"
-  lambda_load_zip          = "${local.lambda_load_path}/artifact.zip"
+  lambda_load_zip          = "${local.lambda_load_path}/artifact-load-${var.name}.zip"
 
   lambda_invoke_name         = "${local.full_name}-invoke"
   lambda_invoke_path         = "${path.module}/lambda/invoke"
   lambda_invoke_package_path = "${local.lambda_invoke_path}/.package"
-  lambda_invoke_zip          = "${local.lambda_invoke_path}/artifact.zip"
+  lambda_invoke_zip          = "${local.lambda_invoke_path}/artifact-invoke-${var.name}.zip"
 
   lambda_check_name         = "${local.full_name}-check"
   lambda_check_path         = "${path.module}/lambda/check"
   lambda_check_package_path = "${local.lambda_check_path}/.package"
-  lambda_check_zip          = "${local.lambda_check_path}/artifact.zip"
+  lambda_check_zip          = "${local.lambda_check_path}/artifact-check-${var.name}.zip"
 }

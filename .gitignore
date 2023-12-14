@@ -4,4 +4,8 @@
 .make/
 .sops-variables.mk
 .env.local
+.venv/
+.dist/
+*.zip
+*.gz
 

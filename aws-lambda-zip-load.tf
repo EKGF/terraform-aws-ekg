@@ -12,9 +12,10 @@ resource "null_resource" "load" {
     working_dir = local.lambda_load_path
 
     environment = {
-      POETRY_BIN = var.poetry_bin
-      PYTHON_BIN = var.python_bin
-      ZIP_BIN    = var.zip_bin
+      ARTIFACT_ZIP = local.lambda_load_zip
+      POETRY_BIN   = var.poetry_bin
+      PYTHON_BIN   = var.python_bin
+      ZIP_BIN      = var.zip_bin
     }
   }
 }

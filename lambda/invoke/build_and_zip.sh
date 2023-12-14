@@ -6,6 +6,7 @@
 #
 # - https://docs.aws.amazon.com/lambda/latest/dg/python-package.html
 #
+ARTIFACT_ZIP=${ARTIFACT_ZIP:-artifact.zip}
 POETRY_BIN=${POETRY_BIN:-poetry}
 PYTHON_BIN=${PYTHON_BIN:-python3}
 ZIP_BIN=${ZIP_BIN:-zip}
@@ -17,7 +18,7 @@ log_file=$(mktemp -t build.log.XXXX)
 # save stdout and stderr to file descriptors 3 and 4, then redirect them to "foo"
 exec 3>&1 4>&2 >${log_file} 2>&1
 
-rm -f artifact.zip >/dev/null 2>&1 || true
+rm -f ${ARTIFACT_ZIP} >/dev/null 2>&1 || true
 
 #
 # Build the Python code
@@ -38,12 +39,14 @@ echo "Packaging done"
 #
 echo "Zipping $(basename $(pwd)):"
 cd .package
+find . -depth -type d -name '*.dist-info' -exec rm -rf {} \;
+find . -depth -type d -name '__pycache__' -exec rm -rf {} \;
 chmod -R 644 $(find . -type f)
 chmod -R 755 $(find . -type d)
-${ZIP_BIN} -r ../artifact.zip . -x '*__pycache__*' -x '*.pyc' -x '*.dist-info*'
+${ZIP_BIN} -r ../${ARTIFACT_ZIP} . -x '*.pyc' -x '*.dist-info*'
 cd ..
-if [[ -f artifact.zip ]]; then
-    zip_file="$(realpath artifact.zip)"
+if [[ -f ${ARTIFACT_ZIP} ]]; then
+    zip_file="$(realpath ${ARTIFACT_ZIP})"
     echo "Zipping done: ${zip_file} $(stat -t --format=%s ${zip_file}) bytes"
     rc=0
 else
