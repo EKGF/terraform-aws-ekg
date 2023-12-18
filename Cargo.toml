@@ -1,0 +1,46 @@
+[workspace]
+
+members = ["crate/*"]
+resolver = "2"
+
+[profile.dev.package.backtrace]
+opt-level = 3
+
+[profile.dev]
+# less code to include in binary
+panic = 'abort'
+# link time optimization using whole-program analysis
+lto = false
+# optimization over all code (better optimization, slower build)
+codegen-units = 256
+# optimization for size (more aggressive)
+opt-level = 0
+incremental = true
+debug = true
+debug-assertions = true
+overflow-checks = true
+
+[profile.release]
+# less code to include in binary
+panic = 'abort'
+# link time optimization using whole-program analysis
+lto = true
+# optimization over all code (better optimization, slower build)
+codegen-units = 1
+# optimization for size (more aggressive)
+opt-level = 'z'
+
+[workspace.package]
+version = "0.0.1"
+authors = [
+    "Jacobus Geluk <jacobus.geluk@ekgf.org>",
+]
+edition = "2021"
+repository = "https://github.com/EKGF/terraform-aws-rdf-load"
+readme = "./README.md"
+keywords = ["digital-twin", "ekg", "knowledge-graph", "rdf", "aws"]
+publish = false
+rust-version = "1.67"
+
+[workspace.dependencies]
+rust-embed = { version = "8.0.0" }

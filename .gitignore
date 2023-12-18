@@ -8,4 +8,5 @@
 .dist/
 *.zip
 *.gz
-
+target/
+Cargo.lock
