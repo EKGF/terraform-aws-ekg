@@ -38,7 +38,7 @@ async fn test_invoke_01() -> Result<(), Error> {
         assert_eq!(map.len(), 2);
         assert!(map.contains_key("statusCode"));
         if let serde_json::Value::Number(result) = map.get("statusCode").unwrap() {
-            assert_eq!(result.as_u64(), Some(200 as u64));
+            assert_eq!(result.as_u64(), Some(200u64));
         } else {
             panic!("lambda output statusCode is not a number");
         }

@@ -42,7 +42,7 @@ pub(crate) async fn handle_lambda_event(event: LambdaEvent<Value>) -> Result<Val
 
     tracing::info!("XXXXXX Payload XXXX {:#?}\n\n", payload);
 
-    let request = serde_json::from_value::<requests::InvokeRequest>(payload).map_err(|e| {
+    let request = serde_json::from_value::<InvokeRequest>(payload).map_err(|e| {
         tracing::error!("Error parsing request: {}", e);
         e
     })?;
@@ -51,7 +51,7 @@ pub(crate) async fn handle_lambda_event(event: LambdaEvent<Value>) -> Result<Val
 }
 
 pub(crate) async fn handle_lambda_payload(request: &InvokeRequest) -> Result<Value, Error> {
-    let identifier_contexts = ekg_identifier::EkgIdentifierContexts::from_env()?;
+    let identifier_contexts = EkgIdentifierContexts::from_env()?;
 
     for record in &request.records {
         handle_sns_event_record(&record, &identifier_contexts).await?;

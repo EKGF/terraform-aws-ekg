@@ -134,7 +134,7 @@ pub enum Error {
     ParseIntError(#[from] std::num::ParseIntError),
 
     /// Encountered a syntax error in a SPARQL statement
-    #[cfg(all(not(target_arch = "wasm32"), feature = "sparql"))]
+    #[cfg(all(not(target_arch = "wasm32"), feature = "sparql", feature = "rdfox"))]
     #[error("Encountered SPARQL error \"{source:}\" in\n{statement:}")]
     SPARQLStatementError {
         #[source]
@@ -153,7 +153,7 @@ pub enum Error {
 
     #[cfg(feature = "iref")]
     #[error(transparent)]
-    IriParseError(#[from] iref::Error),
+    IriErrorString(#[from] iref::IriError<String>),
 
     #[cfg(feature = "iri-string")]
     #[error(transparent)]
@@ -261,12 +261,12 @@ pub enum Error {
 
 unsafe impl Send for Error {}
 
-#[cfg(feature = "iref")]
-impl From<(iref::Error, String)> for Error {
-    fn from(value: (iref::Error, String)) -> Self {
-        Error::IrefError { error: value.0, iri: value.1 }
-    }
-}
+// #[cfg(feature = "iref")]
+// impl From<(iref::Error, String)> for Error {
+//     fn from(value: (iref::Error, String)) -> Self {
+//         Error::IrefError { error: value.0, iri: value.1 }
+//     }
+// }
 
 #[cfg(all(feature = "salvo", not(target_arch = "wasm32")))]
 #[salvo::async_trait]
