@@ -1,11 +1,11 @@
+ifdef GIT_ROOT
+else
+GIT_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
+endif
 
-Makefile:: ;
+MK_DIR := $(GIT_ROOT)/.make
 
 include ekgf-make.mk
-
-.PHONY: all
-all:
-	@echo "all"
 
 .PHONY: build-lambda-invoke
 build-lambda-invoke: poetry-check
