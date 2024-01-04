@@ -1,4 +1,5 @@
 resource "aws_sfn_state_machine" "rdf_load" {
+  provider = aws.ekg_api
   name     = local.full_name
   role_arn = aws_iam_role.sfn_rdf_load.arn
   publish  = true
@@ -27,12 +28,12 @@ resource "aws_sfn_state_machine" "rdf_load" {
                       "Next": "CheckIfLoaderFinished"
                   },
                   {
-                      "Variable": "$.LoadOutput.statusCodeDetail",
+                      "Variable": "$.LoadOutput.detailError",
                       "StringEquals": "MaxLoadTaskQueueSizeLimitBreached",
                       "Next": "RetryLoadInstruction"
                   },
                   {
-                      "Variable": "$.LoadOutput.statusCodeDetail",
+                      "Variable": "$.LoadOutput.detailError",
                       "StringEquals": "MaxConcurrentLoadLimitBreached",
                       "Next": "RetryLoadInstruction"
                   }

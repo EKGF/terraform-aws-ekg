@@ -1,5 +1,6 @@
 [package]
-name = "ekg-identifier"
+name = "ekg-util"
+description = "A library with some low-level simple utility functions used by the other ekg-* crates"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,6 +14,6 @@ rust-version.workspace = true
 
 [dependencies]
 tracing.workspace = true
+tracing-subscriber.workspace = true
 lambda_runtime.workspace = true
 ekg-error = { path = "../ekg-error" }
-ekg-util = { path = "../ekg-util" }

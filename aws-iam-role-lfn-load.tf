@@ -1,6 +1,6 @@
 # Create the IAM role that the load lambda function will use
 resource "aws_iam_role" "lfn_load" {
-  #provider              = aws.target
+  provider             = aws.ekg_api
   name                 = local.lfn_role_load
   path                 = local.path
   assume_role_policy   = data.aws_iam_policy_document.assume_role_policy_for_service.json

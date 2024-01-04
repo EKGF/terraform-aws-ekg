@@ -1,37 +1,38 @@
 resource "aws_lambda_function" "invoke" {
+  provider         = aws.ekg_api
   function_name    = local.lambda_invoke_name
   filename         = data.archive_file.invoke.output_path
   source_code_hash = data.archive_file.invoke.output_base64sha256
+  #  filename         = local.lambda_invoke_zip
+  #  source_code_hash = filebase64sha256(local.lambda_invoke_zip)
   role             = aws_iam_role.lfn_invoke.arn
-  runtime          = "python3.11"
-  handler          = "lambda_function.lambda_handler"
+  handler          = "bootstrap"
+  runtime          = "provided.al2"
+  architectures    = ["arm64"]
   timeout          = 1 * 60
   memory_size      = 128
 
   environment {
     variables = {
       //
-      EKG_BASE_INTERNAL          = var.ekg_base_internal
-      EKG_ID_BASE_INTERNAL       = var.ekg_id_base_internal
-      EKG_GRAPH_BASE_INTERNAL    = var.ekg_graph_base_internal
-      EKG_ONTOLOGY_BASE_INTERNAL = var.ekg_ontology_base_internal
+      EKG_BASE_INTERNAL             = var.ekg_base_internal
+      EKG_ID_BASE_INTERNAL          = var.ekg_id_base_internal
+      EKG_GRAPH_BASE_INTERNAL       = var.ekg_graph_base_internal
+      EKG_ONTOLOGY_BASE_INTERNAL    = var.ekg_ontology_base_internal
       //
-      EKG_BASE_EXTERNAL          = var.ekg_base_external
-      EKG_ID_BASE_EXTERNAL       = var.ekg_id_base_external
-      EKG_GRAPH_BASE_EXTERNAL    = var.ekg_graph_base_external
-      EKG_ONTOLOGY_BASE_EXTERNAL = var.ekg_ontology_base_external
+      EKG_BASE_EXTERNAL             = var.ekg_base_external
+      EKG_ID_BASE_EXTERNAL          = var.ekg_id_base_external
+      EKG_GRAPH_BASE_EXTERNAL       = var.ekg_graph_base_external
+      EKG_ONTOLOGY_BASE_EXTERNAL    = var.ekg_ontology_base_external
       //
-      EKG_API_BASE               = var.ekg_api_base
+      EKG_API_BASE                  = var.ekg_api_base
       //
-      EKG_SPARQL_LOADER_ENDPOINT = var.ekg_sparql_loader_endpoint
-      EKG_SPARQL_HEALTH_ENDPOINT = var.ekg_sparql_health_endpoint
-      EKG_SPARQL_QUERY_ENDPOINT  = var.ekg_sparql_query_endpoint
-      EKG_SPARQL_UPDATE_ENDPOINT = var.ekg_sparql_update_endpoint
+      neptune_s3_iam_role_arn       = var.neptune_s3_iam_role_arn
+      neptune_s3_bucket_region      = var.aws_region
       //
-      neptune_s3_iam_role_arn    = var.neptune_s3_iam_role_arn
-      neptune_s3_bucket_region   = var.aws_region
+      rdf_load_sfn_arn              = aws_sfn_state_machine.rdf_load.arn
       //
-      rdf_load_sfn_arn           = aws_sfn_state_machine.rdf_load.arn
+      AWS_NEPTUNE_LOAD_IAM_ROLE_ARN = var.neptune_s3_iam_role_arn
     }
   }
 
@@ -42,7 +43,7 @@ resource "aws_lambda_function" "invoke" {
 
   depends_on = [
     aws_cloudwatch_log_group.lfn_invoke,
-    data.archive_file.load,
+    null_resource.invoke
   ]
 
   tags = local.default_tags

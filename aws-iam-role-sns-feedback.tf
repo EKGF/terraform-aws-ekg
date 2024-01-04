@@ -1,5 +1,5 @@
 resource "aws_iam_role" "sns_feedback_role" {
-  #provider              = aws.target
+  provider              = aws.ekg_api
   name                  = "${local.prefix}-sns-feedback"
   path                  = local.path
   force_detach_policies = true

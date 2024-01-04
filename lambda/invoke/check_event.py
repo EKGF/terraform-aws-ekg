@@ -53,7 +53,7 @@ def check_event(event, load_request: LoadRequest):
     # {
     #     "eventVersion": "2.1",
     #     "eventSource": "aws:s3",
-    #     "awsRegion": "eu-west-2",
+    #     "awsRegion": "antartica-01",
     #     "eventTime": "2023-09-18T10:03:15.979Z",
     #     "eventName": "ObjectCreated:Put",
     #     "userIdentity": {

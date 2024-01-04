@@ -1,6 +1,6 @@
 # Create the IAM role that the step function will use
 resource "aws_iam_role" "sfn_rdf_load" {
-  #provider              = aws.target
+  provider             = aws.ekg_api
   name                 = local.sfn_role_name
   path                 = local.path
   assume_role_policy   = data.aws_iam_policy_document.assume_role_policy_for_sfn.json

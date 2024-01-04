@@ -19,6 +19,14 @@ pub enum Error {
     InvalidInput,
 
     #[allow(dead_code)]
+    #[error("No Input Records")]
+    NoInputRecords,
+
+    #[allow(dead_code)]
+    #[error("Timeout")]
+    Timeout,
+
+    #[allow(dead_code)]
     #[error("Mandatory Environment Variable {0} is empty")]
     EnvironmentVariableEmpty(String),
 

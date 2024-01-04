@@ -42,7 +42,8 @@ class TestFunction(unittest.TestCase):
 
             context = json.loads(context_data, object_hook=lambda d: SimpleNamespace(**d))
 
-            os.environ["neptune_endpoint"] = "ekgf-dt-dev-staging.cluster-ckvyb9qgnfdp.eu-west-2.neptune.amazonaws.com"
+            os.environ[
+                "neptune_endpoint"] = "ekgf-dt-dev-staging.cluster-ckvyb9qgnfdp.antartica-01.neptune.amazonaws.com"
             os.environ["neptune_port"] = "8182"
             os.environ["neptune_s3_iam_role_arn"] = "arn:aws:iam::123456789:role/ekgf-dt-dev-neptune"
             os.environ["AWS_LAMBDA_LOG_GROUP_NAME"] = context.log_group_name

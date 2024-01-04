@@ -1,4 +1,5 @@
 resource "aws_lambda_function" "check" {
+  provider         = aws.ekg_api
   function_name    = local.lambda_check_name
   filename         = data.archive_file.check.output_path
   source_code_hash = data.archive_file.check.output_base64sha256

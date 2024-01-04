@@ -1,4 +1,4 @@
-use ekg_error::Error;
+use {ekg_error::Error, ekg_util::env::mandatory_env_var};
 
 pub struct EkgIdentifierContext {
     pub ekg_base:          String,
@@ -8,33 +8,12 @@ pub struct EkgIdentifierContext {
 }
 
 impl EkgIdentifierContext {
-    pub fn from_env(suffix: &str) -> Result<Self, Error> {
-        let var = |name: &str| -> Result<String, Error> {
-            let env_var_name = format!("{}{}", name, suffix);
-            let val = match std::env::var(env_var_name.as_str()) {
-                Ok(val) => {
-                    if val.trim().len() == 0 {
-                        Err(Error::EnvironmentVariableEmpty(
-                            env_var_name.to_string(),
-                        ))
-                    } else {
-                        Ok(val)
-                    }
-                },
-                Err(_) => {
-                    Err(Error::MandatoryEnvironmentVariableMissing(
-                        env_var_name.to_string(),
-                    ))
-                },
-            };
-            val
-        };
-
+    pub fn from_env(suffix: &'static str) -> Result<Self, Error> {
         Ok(Self {
-            ekg_base:          var("EKG_BASE")?,
-            ekg_id_base:       var("EKG_ID_BASE")?,
-            ekg_graph_base:    var("EKG_GRAPH_BASE")?,
-            ekg_ontology_base: var("EKG_ONTOLOGY_BASE")?,
+            ekg_base:          mandatory_env_var("EKG_BASE", Some(suffix))?,
+            ekg_id_base:       mandatory_env_var("EKG_ID_BASE", Some(suffix))?,
+            ekg_graph_base:    mandatory_env_var("EKG_GRAPH_BASE", Some(suffix))?,
+            ekg_ontology_base: mandatory_env_var("EKG_ONTOLOGY_BASE", Some(suffix))?,
         })
     }
 }

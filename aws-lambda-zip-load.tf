@@ -1,22 +1,11 @@
 resource "null_resource" "load" {
   triggers = {
-    #    main       = base64sha256(file("${local.lambda_load_path}/lambda_function.py"))
-    #    test       = base64sha256(file("${local.lambda_load_path}/lambda_function.test.py"))
-    #    pyproject  = base64sha256(file("${local.lambda_load_path}/pyproject.toml"))
     always_run = timestamp()
   }
 
   provisioner "local-exec" {
-    command     = "./build.sh"
-    interpreter = ["bash", "-c"]
-    working_dir = local.lambda_load_path
-
-    environment = {
-      ARTIFACT_ZIP = local.lambda_load_zip
-      POETRY_BIN   = var.poetry_bin
-      PYTHON_BIN   = var.python_bin
-      ZIP_BIN      = var.zip_bin
-    }
+    command     = "cargo lambda build --release --bin ${local.lambda_load_crate} --arm64 --output-format binary"
+    working_dir = local.lambda_load_crate_path
   }
 }
 
@@ -26,6 +15,10 @@ data "archive_file" "load" {
   source_dir       = local.lambda_load_package_path
   output_path      = local.lambda_load_zip
   output_file_mode = "0666"
+  excludes         = setunion(
+    fileset(local.lambda_load_package_path, "**/*.zip"),
+    [local.lambda_load_zip]
+  )
 }
 
 output "lambda_load_zip" {

@@ -1,54 +1,24 @@
-use serde::Deserialize;
-pub use {
-    aws_neptune_load_request::{AwsNeptuneLoadRequest, EkgLfnRequest},
-    invoke_request::InvokeRequest,
-    s3::{S3Bucket, S3EventRecord, S3EventRecords, S3Object},
-    sns::{SnsEventRecord, SnsRecord},
-};
+#![cfg(test)]
 
-pub mod aws_neptune_load_request;
-mod invoke_request;
-mod s3;
-mod sns;
+use {ekg_error::Error, ekg_identifier::EkgIdentifierContexts};
 
-pub type AwsARN = String;
-pub type AwsS3URI = String;
+#[test_log::test(tokio::test)]
+async fn test_invoke_01() -> Result<(), Error> {
+    tracing::info!("test_invoke_01");
+    let aws_config = aws_config::load_from_env().await;
+    let aws_sfn_client = aws_sdk_sfn::Client::new(&aws_config);
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct UserId {
-    pub principal_id: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct RequestParameters {
-    /// ip-address-where-request-came-from
-    #[serde(rename = "sourceIPAddress")]
-    pub source_ip_address: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ResponseElements {
-    /// Amazon S3 generated request ID
-    #[serde(rename = "x-amz-request-id")]
-    pub x_amz_request_id: String,
-    /// Amazon S3 host that processed the request
-    #[serde(rename = "x-amz-id-2")]
-    pub x_amz_id_2:       String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct OwnerIdentity {
-    /// Amazon-customer-ID-of-the-bucket-owner
-    pub principal_id: String,
-}
-
-#[cfg(test)]
-mod tests {
-    #[test_log::test]
-    fn invoke() {
-        let event = r#"{
+    EkgIdentifierContexts::default_test();
+    std::env::set_var(
+        "AWS_NEPTUNE_LOAD_IAM_ROLE_ARN",
+        "arn:aws:iam::12345:role/ekgf-dt-dev-neptune-load",
+    );
+    std::env::set_var("AWS_REGION", "antartica-01");
+    std::env::set_var(
+        "rdf_load_sfn_arn",
+        "arn:aws:states:antartica-01:123456789012:stateMachine:rdf_load",
+    );
+    let event = r#"{
           "Records": [
             {
               "EventSource": "aws:sns",
@@ -70,26 +40,22 @@ mod tests {
             }
           ]
         }"#;
-        let request_as_value: serde_json::Value = serde_json::from_str(event).unwrap();
-        println!("result: {:#?}", request_as_value);
-        let request =
-            serde_json::from_value::<super::InvokeRequest>(request_as_value.clone()).unwrap();
-        println!("result: {:#?}", request);
-        for record in request.records {
-            let sns = record.sns;
-            tracing::info!("XXXXXX SNS XXXX {:#?}\n\n", sns);
-            // Get the embedded JSON message
-            let s3_event_record_as_value = sns.message;
-            tracing::info!(
-                "XXXXXX S3 Event Record 1 XXXX {:#?}",
-                s3_event_record_as_value
-            );
-            let s3_event_record =
-                serde_json::from_str::<S3EventRecords>(&s3_event_record_as_value).unwrap();
-            tracing::info!(
-                "XXXXXX S3 Event Record 2 XXXX {:#?}",
-                s3_event_record
-            );
+    let request_as_value: serde_json::Value = serde_json::from_str(event).unwrap();
+    println!("result: {:#?}", request_as_value);
+    let request = serde_json::from_value::<requests::InvokeRequest>(request_as_value.clone())?;
+    println!("result: {:#?}", request);
+    let lambda_output = crate::handle_lambda_payload(&request, aws_sfn_client).await?;
+    println!("result: {:#?}", lambda_output);
+    if let serde_json::Value::Object(map) = lambda_output {
+        assert_eq!(map.len(), 1);
+        assert!(map.contains_key("statusCode"));
+        if let serde_json::Value::Number(result) = map.get("statusCode").unwrap() {
+            assert_eq!(result.as_u64(), Some(200u64));
+        } else {
+            panic!("lambda output statusCode is not a number");
         }
+    } else {
+        panic!("lambda output is not a JSON object");
     }
+    Ok(())
 }

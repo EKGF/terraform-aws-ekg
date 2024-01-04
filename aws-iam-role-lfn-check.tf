@@ -1,6 +1,6 @@
 # Create the IAM role that the check lambda function will use
 resource "aws_iam_role" "lfn_check" {
-  #provider              = aws.target
+  provider             = aws.ekg_api
   name                 = local.lfn_role_check
   path                 = local.path
   assume_role_policy   = data.aws_iam_policy_document.assume_role_policy_for_service.json

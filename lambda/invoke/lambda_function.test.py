@@ -43,7 +43,7 @@ class TestFunction(unittest.TestCase):
             context = json.loads(context_data, object_hook=lambda d: SimpleNamespace(**d))
 
             os.environ["neptune_s3_iam_role_arn"] = "arn:aws:iam::123456789:role/ekgf-dt-dev-neptune"
-            os.environ["rdf_load_sfn_arn"] = "arn:aws:states:eu-west-2:123456789:stateMachine:rdf-load"
+            os.environ["rdf_load_sfn_arn"] = "arn:aws:states:antartica-01:123456789:stateMachine:rdf-load"
             os.environ["AWS_LAMBDA_LOG_GROUP_NAME"] = context.log_group_name
             os.environ["AWS_LAMBDA_LOG_STREAM_NAME"] = context.log_stream_name
             os.environ["EKG_BASE_INTERNAL"] = "https://placeholder.kg"

@@ -1,5 +1,6 @@
 [package]
-name = "requests"
+name = "ekg-lfn-invoke"
+description = "AWS Lambda function to invoke the AWS Step Function that processes the loading of a given RDF file into the EKG."
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -14,17 +15,20 @@ rust-version.workspace = true
 [dependencies]
 tracing.workspace = true
 tracing-subscriber.workspace = true
-serde.workspace = true
+lambda_runtime.workspace = true
+aws-config.workspace = true
+aws-sdk-sfn.workspace = true
 serde_json.workspace = true
 config.workspace = true
 tokio.workspace = true
+serde.workspace = true
 unreachable.workspace = true
 simple-error.workspace = true
-lambda_runtime.workspace = true
-aws-sdk-neptunedata.workspace = true
 ekg-error = { path = "../ekg-error" }
-ekg-util = { path = "../ekg-util" }
 ekg-identifier = { path = "../ekg-identifier" }
+ekg-util = { path = "../ekg-util" }
+requests = { path = "../requests" }
 
 [dev-dependencies]
 test-log.workspace = true
+tracing-subscriber.workspace = true

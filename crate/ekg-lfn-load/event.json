@@ -1,0 +1,19 @@
+{
+  "load_request": {
+    "dependencies": [],
+    "failOnError": "TRUE",
+    "format": "turtle",
+    "iamRoleArn": "arn:aws:iam::123456789012:role/ekgf-dt/dev/staging/ekgf-dt-dev-staging-neptune",
+    "mode": "AUTO",
+    "parallelism": "MEDIUM",
+    "parserConfiguration": {
+      "baseUri": "https://placeholder.kg/id",
+      "namedGraphUri": "s3://ekgf-dt-dev-metadata/use-case/studio/stories/get-use-cases/tests.ttl"
+    },
+    "queueRequest": true,
+    "region": "eu-west-2",
+    "source": "s3://ekgf-dt-dev-metadata/use-case/studio/stories/get-use-cases/tests.ttl",
+    "updateSingleCardinalityProperties": "FALSE"
+  },
+  "rdf_load_sfn_arn": "arn:aws:states:antartica-01:123456789012:stateMachine:ekgf-dt-dev-metadata-loader"
+}

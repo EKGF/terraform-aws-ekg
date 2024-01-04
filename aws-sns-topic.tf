@@ -1,5 +1,6 @@
 resource "aws_sns_topic" "rdf_load" {
-  name = local.sns_topic
+  provider = aws.ekg_api
+  name     = local.sns_topic
 
   # Make sure that SNS can log to CloudWatch for each Lambda invocation
   lambda_failure_feedback_role_arn = aws_iam_role.sns_feedback_role.arn

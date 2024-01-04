@@ -1,5 +1,6 @@
 resource "aws_s3_bucket_notification" "s3_notif" {
-  bucket = aws_s3_bucket.source_data.id
+  provider = aws.ekg_api
+  bucket   = aws_s3_bucket.source_data.id
 
   topic {
     topic_arn = aws_sns_topic.rdf_load.arn

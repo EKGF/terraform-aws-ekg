@@ -7,7 +7,10 @@ data "aws_iam_policy_document" "sfn" {
     effect    = "Allow"
     actions   = ["lambda:InvokeFunction"]
     resources = [
-      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_load_name}"
+      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_load_name}",
+      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_load_name}/*",
+      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_check_name}",
+      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.lambda_check_name}/*"
     ]
   }
 
