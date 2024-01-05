@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.8](https://github.com/EKGF/terraform-neptune/compare/0.0.7..0.0.8) - 2024-01-05
+#### Miscellaneous Chores
+- **(ci)** updated .gitignore - ([ba333b5](https://github.com/EKGF/terraform-neptune/commit/ba333b5cd92785fbcd1cbf5ac5f98e925a54d22e)) - [@jgeluk](https://github.com/jgeluk)
+- intermediate save, does not work - ([ebb5b58](https://github.com/EKGF/terraform-neptune/commit/ebb5b58a875b8cd665d36f8b167aa59c926752fa)) - [@jgeluk](https://github.com/jgeluk)
+#### Refactoring
+- **(lambda)** removed old python code - ([b5a4da0](https://github.com/EKGF/terraform-neptune/commit/b5a4da0b464f8dbd23a8df615ee00f7fa1dce51b)) - [@jgeluk](https://github.com/jgeluk)
+- **(lambda)** reimplemented check lambda function in Rust - ([cd70c75](https://github.com/EKGF/terraform-neptune/commit/cd70c7583c914d40177edb041b3eef268e6316af)) - [@jgeluk](https://github.com/jgeluk)
+- **(lambda)** reimplemented invoke and load lambda functions in Rust - ([0766c59](https://github.com/EKGF/terraform-neptune/commit/0766c5918a58101e05cf62ffd04d5372c045ba27)) - [@jgeluk](https://github.com/jgeluk)
+- **(lambda)** minor changes - ([2ef05cb](https://github.com/EKGF/terraform-neptune/commit/2ef05cb69bcda2604df50ed5dbd625c45f8e9205)) - [@jgeluk](https://github.com/jgeluk)
+- **(lambda)** boilerplate for rust version of lambdas - ([0c57cc3](https://github.com/EKGF/terraform-neptune/commit/0c57cc3113bafb2387af6161696dc56bfad28337)) - [@jgeluk](https://github.com/jgeluk)
+- **(makefiles)** updated makefiles - ([157eabb](https://github.com/EKGF/terraform-neptune/commit/157eabb3b0e45ad117af042173828875e4bc79d0)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.7](https://github.com/EKGF/terraform-neptune/compare/0.0.6..0.0.7) - 2023-12-08
 #### Refactoring
 - **(rdf-load)** aws step function works now - ([ce2a737](https://github.com/EKGF/terraform-neptune/commit/ce2a737c05ff2e570f4a857003d28da7176e4b8b)) - [@jgeluk](https://github.com/jgeluk)

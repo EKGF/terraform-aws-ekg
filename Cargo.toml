@@ -30,7 +30,7 @@ codegen-units = 1
 opt-level = 'z'
 
 [workspace.package]
-version = "0.0.1"
+version = "0.0.8"
 authors = [
     "Jacobus Geluk <jacobus.geluk@ekgf.org>",
 ]
