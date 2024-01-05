@@ -1,5 +1,6 @@
 [package]
-name = "ekg-identifier"
+name = "ekg-aws-util"
+description = "A library with some low-level simple AWS-specific utility functions used by the other ekg-* crates"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,10 +14,19 @@ rust-version.workspace = true
 
 [dependencies]
 tracing.workspace = true
+tracing-subscriber.workspace = true
 lambda_runtime.workspace = true
+aws-config.workspace = true
+aws-types.workspace = true
+aws-smithy-runtime-api.workspace = true
+aws-sdk-neptunedata.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 ekg-error.workspace = true
 ekg-util.workspace = true
+ekg-identifier.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true
 tracing-subscriber.workspace = true
+ekg-lfn-invoke.workspace = true

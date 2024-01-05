@@ -16,9 +16,11 @@ build-lambda-load:
 	$(MAKE) -C $(GIT_ROOT)/crate/ekg-lfn-load build
 
 .PHONY: build-lambda-check
-build-lambda-check: poetry-check
-	@echo "build-lambda-check"
-	cd $(GIT_ROOT)/lambda/check && $(POETRY_BIN) build
+build-lambda-check:
+	$(MAKE) -C $(GIT_ROOT)/crate/ekg-lfn-check build
 
 .PHONY: build
 build: build-lambda-invoke build-lambda-load build-lambda-check
+
+.PHONY: install
+install: cargo-install-components terraform-install cog-install

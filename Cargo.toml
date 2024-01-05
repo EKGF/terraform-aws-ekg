@@ -39,9 +39,19 @@ repository = "https://github.com/EKGF/terraform-aws-rdf-load"
 readme = "./README.md"
 keywords = ["digital-twin", "ekg", "knowledge-graph", "rdf", "aws"]
 publish = false
-rust-version = "1.67"
+rust-version = "1.75"
 
 [workspace.dependencies]
+#
+# Local crates
+#
+ekg-aws-util = { path = "crate/ekg-aws-util" }
+ekg-error = { path = "crate/ekg-error" }
+ekg-identifier = { path = "crate/ekg-identifier" }
+ekg-lfn-check = { path = "crate/ekg-lfn-check" }
+ekg-lfn-invoke = { path = "crate/ekg-lfn-invoke" }
+ekg-lfn-load = { path = "crate/ekg-lfn-load" }
+ekg-util = { path = "crate/ekg-util" }
 #
 # Tracing & Logging
 #

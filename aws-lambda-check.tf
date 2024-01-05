@@ -4,9 +4,10 @@ resource "aws_lambda_function" "check" {
   filename         = data.archive_file.check.output_path
   source_code_hash = data.archive_file.check.output_base64sha256
   role             = aws_iam_role.lfn_invoke.arn
-  runtime          = "python3.11"
-  handler          = "lambda_function.lambda_handler"
-  timeout          = 10 * 60
+  handler          = "bootstrap"
+  runtime          = "provided.al2"
+  architectures    = ["arm64"]
+  timeout          = 1 * 60
   memory_size      = 128
 
   environment {
@@ -41,7 +42,7 @@ resource "aws_lambda_function" "check" {
 
   depends_on = [
     aws_cloudwatch_log_group.lfn_check,
-    data.archive_file.check,
+    null_resource.load,
   ]
 
   tags = local.default_tags

@@ -42,9 +42,7 @@ async fn test_invoke_01() -> Result<(), Error> {
         }"#;
     let request_as_value: serde_json::Value = serde_json::from_str(event).unwrap();
     println!("result: {:#?}", request_as_value);
-    let request = serde_json::from_value::<requests::InvokeRequest>(request_as_value.clone())?;
-    println!("result: {:#?}", request);
-    let lambda_output = crate::handle_lambda_payload(&request, aws_sfn_client).await?;
+    let lambda_output = crate::handle_lambda_payload(request_as_value, aws_sfn_client).await?;
     println!("result: {:#?}", lambda_output);
     if let serde_json::Value::Object(map) = lambda_output {
         assert_eq!(map.len(), 1);

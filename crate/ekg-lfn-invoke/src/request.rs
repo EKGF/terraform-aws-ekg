@@ -1,4 +1,4 @@
-use {crate::sns::SnsEventRecord, serde::Deserialize};
+use {ekg_aws_util::sns::SnsEventRecord, serde::Deserialize};
 
 /// The incoming request structure.
 /// For example:
@@ -45,6 +45,6 @@ use {crate::sns::SnsEventRecord, serde::Deserialize};
 /// }
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-pub struct InvokeRequest {
+pub struct Request {
     pub records: Vec<SnsEventRecord>,
 }

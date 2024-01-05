@@ -1,5 +1,6 @@
 [package]
-name = "requests"
+name = "ekg-lfn-check"
+description = "AWS Lambda function to check whether the Amazon Neptune bulk loader function has finished loading a given RDF file"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -14,17 +15,23 @@ rust-version.workspace = true
 [dependencies]
 tracing.workspace = true
 tracing-subscriber.workspace = true
+lambda_runtime.workspace = true
+aws-config.workspace = true
+aws-types.workspace = true
+aws-smithy-runtime-api.workspace = true
+aws-sdk-neptunedata.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 config.workspace = true
 tokio.workspace = true
 unreachable.workspace = true
 simple-error.workspace = true
-lambda_runtime.workspace = true
-aws-sdk-neptunedata.workspace = true
-ekg-error = { path = "../ekg-error" }
-ekg-util = { path = "../ekg-util" }
-ekg-identifier = { path = "../ekg-identifier" }
+ekg-error.workspace = true
+ekg-identifier.workspace = true
+ekg-util.workspace = true
+ekg-aws-util.workspace = true
+ekg-lfn-load.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true
+tracing-subscriber.workspace = true

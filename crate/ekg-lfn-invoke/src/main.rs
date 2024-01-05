@@ -1,21 +1,18 @@
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
+
+pub use request::Request;
 use {
     crate::{sfn_input::StepFunctionInput, sfn_state_machine::StateMachine},
+    ekg_aws_util::{S3EventRecord, S3EventRecords, SnsEventRecord},
     ekg_error::Error,
     ekg_identifier::EkgIdentifierContexts,
     ekg_util::env::mandatory_env_var,
-    requests::{
-        AwsNeptuneLoadRequest,
-        InvokeRequest,
-        S3EventRecord,
-        S3EventRecords,
-        SnsEventRecord,
-    },
     serde::Serialize,
     serde_json::{json, Value},
 };
 
+mod request;
 mod sfn_input;
 mod sfn_state_machine;
 #[cfg(test)]
@@ -25,7 +22,7 @@ mod tests;
 #[derive(Serialize)]
 struct Response {
     req_id: String,
-    msg:    String,
+    msg: String,
 }
 
 #[tokio::main]
@@ -51,14 +48,24 @@ pub(crate) async fn handle_lambda_event(
 
     let (payload, _ctx) = event.into_parts();
 
-    tracing::trace!("Payload {:#?}\n\n", payload);
+    handle_lambda_payload(payload, aws_sfn_client).await
+}
 
-    let request = serde_json::from_value::<InvokeRequest>(payload).map_err(|e| {
+pub(crate) async fn handle_lambda_payload(
+    payload: Value,
+    aws_sfn_client: aws_sdk_sfn::Client,
+) -> Result<Value, LambdaError> {
+    tracing::trace!(
+        "Payload {}",
+        serde_json::to_string_pretty(&payload)?
+    );
+
+    let request = serde_json::from_value::<Request>(payload).map_err(|e| {
         tracing::error!("Error parsing request: {}", e);
         e
     })?;
 
-    handle_lambda_payload(&request, aws_sfn_client)
+    handle_lambda_request(&request, aws_sfn_client)
         .await
         .map_err(|e| {
             tracing::error!("Error handling request: {}", e);
@@ -66,8 +73,8 @@ pub(crate) async fn handle_lambda_event(
         })
 }
 
-pub(crate) async fn handle_lambda_payload(
-    request: &InvokeRequest,
+pub(crate) async fn handle_lambda_request(
+    request: &Request,
     aws_sfn_client: aws_sdk_sfn::Client,
 ) -> Result<Value, Error> {
     let identifier_contexts = EkgIdentifierContexts::from_env()?;
@@ -99,7 +106,7 @@ async fn handle_sns_event_record(
     let s3_event_records_as_value = serde_json::from_str::<Value>(&message)?;
     let s3_event_records = serde_json::from_value::<S3EventRecords>(s3_event_records_as_value)?;
     if s3_event_records.records.len() == 0 {
-        return Err(Error::NoInputRecords)
+        return Err(Error::NoInputRecords);
     }
     for s3_event_record in s3_event_records.records {
         handle_s3_event_record(
@@ -119,8 +126,10 @@ async fn handle_s3_event_record(
 ) -> Result<(), Error> {
     tracing::trace!("S3 Event Record: {:#?}", s3_event_record);
 
-    let neptune_load_request =
-        AwsNeptuneLoadRequest::from_s3_event_record(&s3_event_record, &identifier_contexts)?;
+    let neptune_load_request = ekg_aws_util::neptune::AwsNeptuneLoadRequest::from_s3_event_record(
+        &s3_event_record,
+        &identifier_contexts,
+    )?;
     let sfn_input = StepFunctionInput::from_load_request(
         neptune_load_request,
         mandatory_env_var("rdf_load_sfn_arn", None)?,

@@ -26,10 +26,10 @@ tokio.workspace = true
 serde.workspace = true
 unreachable.workspace = true
 simple-error.workspace = true
-ekg-error = { path = "../ekg-error" }
-ekg-identifier = { path = "../ekg-identifier" }
-ekg-util = { path = "../ekg-util" }
-requests = { path = "../requests" }
+ekg-error.workspace = true
+ekg-identifier.workspace = true
+ekg-util.workspace = true
+ekg-aws-util.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

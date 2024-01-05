@@ -1,10 +1,7 @@
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
 
-pub use request::Request;
-use {
-    ekg_aws_util::lambda::LambdaResponse, ekg_identifier::EkgIdentifierContexts, serde_json::Value,
-};
+use {ekg_aws_util::lambda::LambdaResponse, serde_json::Value};
 
 mod request;
 
@@ -41,12 +38,25 @@ async fn handle_lambda_payload(
     payload: Value,
     aws_neptunedata_client: aws_sdk_neptunedata::Client,
 ) -> Result<LambdaResponse, LambdaError> {
-    tracing::trace!(
+    tracing::info!(
         "Payload {}",
         serde_json::to_string_pretty(&payload)?
     );
 
-    let request = serde_json::from_value::<crate::Request>(payload).map_err(|e| {
+    let load_output = payload
+        .as_object()
+        .unwrap()
+        .get("LoadOutput")
+        .ok_or(LambdaError::from("Missing LoadOutput in payload"))?
+        .clone();
+
+    tracing::info!(
+        "Load output: {:}",
+        serde_json::to_string(&load_output)?
+    );
+
+    // The output of the ekg_lfn_load Lambda function is the input to this one.
+    let request = serde_json::from_value::<LambdaResponse>(load_output).map_err(|e| {
         tracing::error!("Error parsing request: {}", e);
         e
     })?;
@@ -64,40 +74,41 @@ async fn handle_lambda_payload(
     }
 }
 
+/// The actual handler of the Lambda payload.
+///
+/// - `request`: The output of the ekg_lfn_load Lambda function is
+///   the input to this one.
 async fn handle_lambda_request(
-    request: &crate::Request,
+    request: &LambdaResponse,
     aws_neptunedata_client: aws_sdk_neptunedata::Client,
 ) -> Result<LambdaResponse, LambdaError> {
-    let _identifier_contexts = EkgIdentifierContexts::from_env()?;
-    let load_request = &request.load_request;
+    let load_id = request
+        .result_identifier
+        .as_deref()
+        .ok_or(LambdaError::from(
+            "Missing result_identifier in request",
+        ))?;
 
     tracing::info!(
-        "Load request for RDF file {:}",
-        load_request.source
+        "Check whether load job has finished: {:?}",
+        load_id
     );
 
     let result = aws_neptunedata_client
-        .start_loader_job()
-        .source(&load_request.source)
-        .format(load_request.format.as_str().into())
-        .iam_role_arn(&load_request.iam_role_arn)
-        .mode(load_request.mode.clone().into())
-        .s3_bucket_region(load_request.region.as_str().into())
-        .fail_on_error(load_request.fail_on_error.as_str() == "TRUE")
-        .parallelism(load_request.parallelism.as_str().into())
-        .set_parser_configuration(Some(
-            load_request.parser_configuration.as_hash_map(),
-        ))
-        .update_single_cardinality_properties(
-            load_request.update_single_cardinality_properties.as_str() == "TRUE",
-        )
-        .queue_request(load_request.queue_request)
-        .set_dependencies(Some(load_request.dependencies.clone()))
+        .get_loader_job_status()
+        .load_id(load_id)
         .send()
         .await;
 
     match result {
-        Ok(ref loader_job) => Ok(loader_job.into()),
+        Ok(loader_job_status) => Ok(LambdaResponse::ok(
+            format!(
+                "Loader job status is {}",
+                loader_job_status.status()
+            )
+            .as_str(),
+            Some(format!("{:?}", loader_job_status.payload()).as_str()),
+        )),
         Err(error) => Ok(error.into()),
     }
 }
