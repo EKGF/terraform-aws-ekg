@@ -52,8 +52,8 @@ pub enum Error {
          parameters are: {expected_params:?}"
     )]
     DetectedUnknownStoryInputParameter {
-        story_key:       String,
-        param:           String,
+        story_key: String,
+        param: String,
         expected_params: Vec<String>,
     },
 
@@ -146,7 +146,7 @@ pub enum Error {
     #[error("Encountered SPARQL error \"{source:}\" in\n{statement:}")]
     SPARQLStatementError {
         #[source]
-        source:    spargebra::ParseError,
+        source: spargebra::ParseError,
         statement: rdfox_rs::Statement,
     },
 
@@ -265,6 +265,12 @@ pub enum Error {
     #[cfg(feature = "aws-lambda-runtime")]
     #[error(transparent)]
     LambdaError(#[from] lambda_runtime::Error),
+
+    #[error(transparent)]
+    HyperError(#[from] hyper::Error),
+
+    #[error(transparent)]
+    InvalidUri(#[from] hyper::http::uri::InvalidUri),
 }
 
 unsafe impl Send for Error {}

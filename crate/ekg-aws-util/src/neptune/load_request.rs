@@ -16,7 +16,7 @@ use crate::{Region, S3EventRecord, ARN, S3URI};
 /// URL as the source of the triples for proper lineage/provenance purposes.
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct AwsNeptuneLoadRequest {
+pub struct LoadRequest {
     pub source: S3URI,
     #[serde(serialize_with = "serialize_format")]
     #[serde(deserialize_with = "deserialize_format_from_str")]
@@ -32,7 +32,7 @@ pub struct AwsNeptuneLoadRequest {
     pub dependencies: Vec<String>,
 }
 
-impl AwsNeptuneLoadRequest {
+impl LoadRequest {
     pub fn from_s3_event_record(
         s3_event_record: &S3EventRecord,
         identifier_contexts: &EkgIdentifierContexts,

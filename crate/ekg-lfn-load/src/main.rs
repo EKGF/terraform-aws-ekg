@@ -1,6 +1,8 @@
+use indoc::formatdoc;
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
 
+use ekg_aws_util::neptune::LoadRequest;
 pub use request::Request;
 use {
     ekg_aws_util::lambda::LambdaResponse, ekg_identifier::EkgIdentifierContexts, serde_json::Value,
@@ -68,9 +70,74 @@ async fn handle_lambda_request(
     request: &crate::Request,
     aws_neptunedata_client: aws_sdk_neptunedata::Client,
 ) -> Result<LambdaResponse, LambdaError> {
-    let _identifier_contexts = EkgIdentifierContexts::from_env()?;
+    let identifier_contexts = EkgIdentifierContexts::from_env()?;
     let load_request = &request.load_request;
 
+    // First, register the load request in the database itself using SPARQL
+    handle_load_request_registration(
+        load_request,
+        &identifier_contexts,
+        aws_neptunedata_client.clone(),
+    )
+    .await?;
+    // Then, initiate the load request using the NeptuneData API
+    handle_load_request(load_request, aws_neptunedata_client).await
+}
+
+/// Handle the registration (using SPARQL) of the load request in the database itself.
+async fn handle_load_request_registration(
+    load_request: &LoadRequest,
+    ekg_identifier_contexts: &EkgIdentifierContexts,
+    aws_neptunedata_client: aws_sdk_neptunedata::Client,
+) -> Result<LambdaResponse, LambdaError> {
+    // TODO: the string "load-requests" should be based on the name of the terraform module
+    let graph_load_requests = format!(
+        "{}/{}",
+        ekg_identifier_contexts.internal.ekg_graph_base, "load-requests"
+    );
+
+    tracing::info!(
+        "Load request registration for RDF file {:} in graph {}",
+        load_request.source,
+        graph_load_requests
+    );
+
+    let sparql = formatdoc! {
+        r#"
+            PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX ekgops: <https://ekgf.org/ontology/ekgops#>
+    
+            INSERT DATA {
+                GRAPH <{graph_load_requests}> {
+                    <{load_request}> a ekgops:LoadRequest ;
+                        rdfs:label "Load request for {s3_file}" .
+                }
+            }
+        "#,
+        graph_load_requests = graph_load_requests,
+        s3_file = load_request.source,
+    };
+
+    let result = aws_neptunedata_client
+        .sparql()
+        .query(sparql.as_str())
+        .send()
+        .await;
+
+    match result {
+        Ok(_) => Ok(LambdaResponse::ok(
+            "Load request registered successfully",
+            None,
+        )),
+        Err(error) => Ok(error.into()),
+    }
+}
+
+/// Initiate the load request using the NeptuneData API.
+async fn handle_load_request(
+    load_request: &LoadRequest,
+    aws_neptunedata_client: aws_sdk_neptunedata::Client,
+) -> Result<LambdaResponse, LambdaError> {
     tracing::info!(
         "Load request for RDF file {:}",
         load_request.source

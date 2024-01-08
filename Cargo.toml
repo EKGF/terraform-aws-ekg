@@ -70,6 +70,7 @@ simple-error = "0.3.0"
 serde = { version = "1", features = [], default-features = false }
 serde_json = { version = "1", default-features = false }
 serde_path_to_error = { version = "0.1.11", default-features = false }
+indoc = { version = "2", default-features = true }
 #
 # IRI stuff
 #
@@ -98,3 +99,10 @@ aws-smithy-runtime-api = { version = "1.1.1", default-features = true }
 aws-sdk-sfn = { version = "1.9.0", default-features = true, features = ["behavior-version-latest"] }
 aws-sdk-neptune = { version = "1.10.0", default-features = true, features = ["behavior-version-latest"] }
 aws-sdk-neptunedata = { version = "1.9.0", default-features = true, features = ["behavior-version-latest"] }
+#
+# HTTP Stuff
+#
+webpki-roots = "0.26.0"
+rustls = "0.21"
+hyper = { version = "0.14", default-features = false, features = ["client", "http2", "stream", "runtime"] }
+hyper-rustls = { version = "0.24", default-features = false, features = ["http2", "tls12", "webpki-roots", "webpki-tokio", "logging"] }

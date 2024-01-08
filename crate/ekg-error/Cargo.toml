@@ -24,7 +24,8 @@ tracing-subscriber = { workspace = true, features = ["std", "env-filter"] }
 iri-string = { workspace = true, features = ["serde", "alloc"], optional = true }
 rdf-store-rs = { version = "0.0.9", default-features = false, features = ["serde"], optional = true }
 ignore = { workspace = true, optional = true }
-iref = { workspace = true, features = ["serde"], optional = true }
+iref = { workspace = true, optional = true }
+hyper.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.spargebra]
 version = "0.2.7"

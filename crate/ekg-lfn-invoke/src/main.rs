@@ -126,7 +126,7 @@ async fn handle_s3_event_record(
 ) -> Result<(), Error> {
     tracing::trace!("S3 Event Record: {:#?}", s3_event_record);
 
-    let neptune_load_request = ekg_aws_util::neptune::AwsNeptuneLoadRequest::from_s3_event_record(
+    let neptune_load_request = ekg_aws_util::neptune::LoadRequest::from_s3_event_record(
         &s3_event_record,
         &identifier_contexts,
     )?;
