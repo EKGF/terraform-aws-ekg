@@ -1,17 +1,19 @@
-use hyper::Uri;
-use serde::Deserialize;
+use {
+    crate::{ParsedStatement, Statement},
+    ekg_error::Error,
+    ekg_util::env::mandatory_env_var,
+    hyper::Uri,
+};
 
-// use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
-use ekg_error::Error;
-use ekg_util::env::mandatory_env_var;
-
-/// Simple SPARQL client for sending SPARQL queries (or update statements) to a SPARQL endpoint.
+/// Simple SPARQL client for sending SPARQL queries (or update statements) to a
+/// SPARQL endpoint.
+#[derive(Clone)]
 pub struct SPARQLClient {
     pub(crate) client: hyper::client::Client<
         hyper_rustls::HttpsConnector<hyper::client::HttpConnector>,
         hyper::Body,
     >,
-    pub(crate) query_endpoint: Uri,
+    pub(crate) query_endpoint:  Uri,
     pub(crate) update_endpoint: Uri,
 }
 
@@ -54,8 +56,8 @@ impl SPARQLClient {
         let http_client = builder.build(tls_connector);
 
         Ok(Self {
-            client: http_client,
-            query_endpoint: query_endpoint.clone(),
+            client:          http_client,
+            query_endpoint:  query_endpoint.clone(),
             update_endpoint: if let Some(update_endpoint) = update_endpoint {
                 update_endpoint
             } else {
@@ -64,61 +66,69 @@ impl SPARQLClient {
         })
     }
 
-    fn get_request_builder(&self, update: bool) -> hyper::http::request::Builder {
-        let uri = if update {
-            &self.update_endpoint
+    /// Convert a SPARQL statement into a hyper::Body, properly encoded.
+    fn statement_as_body(parsed_statement: &ParsedStatement) -> Result<hyper::Body, Error> {
+        let operation = if parsed_statement.statement_type.is_update_statement() {
+            "update"
         } else {
-            &self.query_endpoint
+            "query"
         };
-        hyper::http::request::Builder::new()
+        let meal = &[(operation, parsed_statement.statement.as_str())];
+        let body_str = serde_urlencoded::to_string(meal)?;
+        Ok(hyper::Body::from(body_str))
+    }
+
+    async fn build_request(
+        &self,
+        statement: &Statement,
+    ) -> Result<hyper::Request<hyper::Body>, ekg_error::Error> {
+        let parsed_statement = ParsedStatement::parse(statement, None)?;
+        let uri = if parsed_statement.statement_type.is_query_statement() {
+            &self.query_endpoint
+        } else {
+            &self.update_endpoint
+        };
+        let accept_header = parsed_statement
+            .statement_type
+            .default_statement_response_mime_type();
+
+        tracing::info!("SPARQL endpoint: {:}", uri);
+        let request = hyper::http::request::Builder::new()
             .method(hyper::http::method::Method::POST)
             .uri(uri.clone())
             .header(
                 hyper::http::header::CONTENT_TYPE,
-                "application/sparql-query",
+                "application/x-www-form-urlencoded",
             )
             .header(
                 hyper::http::header::ACCEPT,
-                "application/sparql-results+json",
+                accept_header,
             )
+            // See https://docs.aws.amazon.com/neptune/latest/userguide/access-graph-sparql-http-trailing-headers.html
+            .header(hyper::http::header::TE, "trailers, deflate, gzip")
+            .body(Self::statement_as_body(&parsed_statement)?)?;
+        tracing::info!("request: {:?}", request);
+        Ok(request)
     }
 
-    /// Send a SPARQL query to the SPARQL endpoint and return the results as JSON.
-    /// Note that this method does not work for SPARQL UPDATE statements, see `update`.
-    pub async fn query_as_json<T>(&self, sparql_statement: &str) -> Result<T, Error>
-    where
-        T: for<'a> Deserialize<'a> + core::fmt::Debug,
-    {
-        let req = self
-            .get_request_builder(false)
-            .body(hyper::Body::from(sparql_statement.to_string()))
-            .expect("request builder");
+    pub async fn execute(&self, statement: &Statement) -> Result<(), Error> {
+        tracing::info!("SPARQL statement: {}", statement);
+
+        let req = self.build_request(statement).await?;
         match self.client.request(req).await {
             Ok(response) => {
-                let (_parts, body) = response.into_parts();
+                tracing::info!("response1: {:?}", response);
+                let (parts, body) = response.into_parts();
+                tracing::info!(
+                    "response2: status={:} headers={:#?}",
+                    parts.status.as_str(),
+                    parts.headers
+                );
                 // TODO: limit the amount of memory used here
                 let body_bytes = hyper::body::to_bytes(body).await?;
-                let v: T = serde_json::from_slice::<T>(&body_bytes)
+                let v: serde_json::Value = serde_json::from_slice::<serde_json::Value>(&body_bytes)
                     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-                // println!("response: {:?}", v);
-                Ok(v)
-            },
-            Err(error) => {
-                tracing::error!("error: {:?}", error);
-                Err(Error::from(error))
-            },
-        }
-    }
-
-    pub async fn update(&self, sparql_statement: &str) -> Result<(), Error> {
-        let req = self
-            .get_request_builder(true)
-            .body(hyper::Body::from(sparql_statement.to_string()))
-            .expect("request builder");
-        match self.client.request(req).await {
-            Ok(response) => {
-                tracing::info!("response: {:?}", response);
-                println!("response: {:?}", response);
+                tracing::info!("response3: {:?}", v);
                 Ok(())
             },
             Err(error) => {

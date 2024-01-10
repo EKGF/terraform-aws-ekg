@@ -42,8 +42,8 @@ resource "aws_sfn_state_machine" "rdf_load" {
           },
           "RetryLoadInstruction": {
               "Type": "Wait",
-              "Comment": "Wait 10 seconds and then retry the instruction to the Neptune bulk loader",
-              "Seconds": 10,
+              "Comment": "Wait 20 seconds and then retry the instruction to the Neptune bulk loader",
+              "Seconds": 20,
               "Next": "InstructNeptuneToLoad"
           },
           "CheckIfLoaderFinished": {

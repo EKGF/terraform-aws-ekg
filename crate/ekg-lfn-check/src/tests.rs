@@ -9,10 +9,6 @@ async fn test_load_01() -> Result<(), ekg_error::Error> {
         "EKG_SPARQL_LOADER_ENDPOINT",
         "http://localhost:8787/checker",
     );
-    std::env::set_var(
-        "AWS_NEPTUNE_LOAD_IAM_ROLE_ARN",
-        "arn:aws:iam::12345:role/ekgf-dt-dev-neptune-check",
-    );
     std::env::set_var("AWS_REGION", "antartica-01");
     let aws_config = aws_config::from_env().load().await;
     let aws_neptunedata_client = ekg_aws_util::neptune::get_neptunedata_client(&aws_config)?;

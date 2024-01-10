@@ -9,14 +9,17 @@ async fn test_invoke_01() -> Result<(), Error> {
     let aws_sfn_client = aws_sdk_sfn::Client::new(&aws_config);
 
     EkgIdentifierContexts::default_test();
-    std::env::set_var(
-        "AWS_NEPTUNE_LOAD_IAM_ROLE_ARN",
-        "arn:aws:iam::12345:role/ekgf-dt-dev-neptune-load",
-    );
     std::env::set_var("AWS_REGION", "antartica-01");
     std::env::set_var(
         "rdf_load_sfn_arn",
         "arn:aws:states:antartica-01:123456789012:stateMachine:rdf_load",
+    );
+    // We have to set the AWS_NEPTUNE_LOAD_IAM_ROLE_ARN environment variable here
+    // because the invoke lambda function will pass it on via the LoadRequest to
+    // the load lambda function via the step-functions state machine.
+    std::env::set_var(
+        "AWS_NEPTUNE_LOAD_IAM_ROLE_ARN",
+        "arn:aws:iam::12345:role/ekgf-dt-dev-neptune-load",
     );
     let event = r#"{
           "Records": [

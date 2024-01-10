@@ -52,8 +52,8 @@ pub enum Error {
          parameters are: {expected_params:?}"
     )]
     DetectedUnknownStoryInputParameter {
-        story_key: String,
-        param: String,
+        story_key:       String,
+        param:           String,
         expected_params: Vec<String>,
     },
 
@@ -142,12 +142,12 @@ pub enum Error {
     ParseIntError(#[from] std::num::ParseIntError),
 
     /// Encountered a syntax error in a SPARQL statement
-    #[cfg(all(not(target_arch = "wasm32"), feature = "sparql", feature = "rdfox"))]
+    #[cfg(not(target_arch = "wasm32"))]
     #[error("Encountered SPARQL error \"{source:}\" in\n{statement:}")]
     SPARQLStatementError {
         #[source]
-        source: spargebra::ParseError,
-        statement: rdfox_rs::Statement,
+        source:    spargebra::ParseError,
+        statement: String,
     },
 
     #[error(transparent)]
@@ -256,7 +256,7 @@ pub enum Error {
 
     #[cfg(feature = "iri")]
     #[error("Encountered IRI error \"{error:}\" in\n{iri:}")]
-    IrefError { error: iref::Error, iri: String },
+    IrefError { error: ekg_error::Error, iri: String },
 
     #[cfg(not(any(target_arch = "wasm32", feature = "wasm-support")))]
     #[error(transparent)]
@@ -270,14 +270,32 @@ pub enum Error {
     HyperError(#[from] hyper::Error),
 
     #[error(transparent)]
+    HttpError(#[from] hyper::http::Error),
+
+    #[error(transparent)]
     InvalidUri(#[from] hyper::http::uri::InvalidUri),
+
+    #[error(transparent)]
+    SerdeUrlEncodingError(#[from] serde_urlencoded::ser::Error),
+
+    #[error("Unknown data type {data_type_id}")]
+    UnknownDataType { data_type_id: u8 },
+    #[error("Unknown value [{value}] for data type {data_type_xsd_iri:?}")]
+    UnknownValueForDataType {
+        data_type_xsd_iri: String,
+        value:             String,
+    },
+    #[error("Unknown XSD data type {data_type_iri}")]
+    UnknownXsdDataType { data_type_iri: String },
+    #[error("Unknown literal value in N-Triples format: {value}")]
+    UnknownNTriplesValue { value: String },
 }
 
 unsafe impl Send for Error {}
 
 // #[cfg(feature = "iref")]
-// impl From<(iref::Error, String)> for Error {
-//     fn from(value: (iref::Error, String)) -> Self {
+// impl From<(ekg_error::Error, String)> for Error {
+//     fn from(value: (ekg_error::Error, String)) -> Self {
 //         Error::IrefError { error: value.0, iri: value.1 }
 //     }
 // }

@@ -15,13 +15,19 @@ async fn test_load_01() -> Result<(), ekg_error::Error> {
     );
     std::env::set_var("AWS_REGION", "antartica-01");
     let aws_config = aws_config::load_from_env().await;
-    let aws_neptunedata_client = ekg_aws_util::neptune::get_neptunedata_client(&aws_config)?;
+    let clients = crate::Clients {
+        // Create the NeptuneData client
+        aws_neptunedata_client: ekg_aws_util::neptune::get_neptunedata_client(&aws_config)?,
+        // Create the HTTP SPARQL client (which strangely enough is not part of the
+        // aws_sdk_neptunedata or aws_sdk_neptune crates, we had to build one ourselves)
+        sparql_client:          ekg_sparql::SPARQLClient::from_env().await?,
+    };
     let event = include_str!("../event.json");
     let request_as_value: serde_json::Value = serde_json::from_str(event).unwrap();
     println!("result: {:#?}", request_as_value);
     let request = serde_json::from_value::<crate::Request>(request_as_value.clone())?;
     println!("result: {:#?}", request);
-    let lambda_output = crate::handle_lambda_request(&request, aws_neptunedata_client).await?;
+    let lambda_output = crate::handle_lambda_request(&request, clients).await?;
     println!("result: {:#?}", lambda_output);
     assert_eq!(lambda_output.status_code, 200);
     Ok(())

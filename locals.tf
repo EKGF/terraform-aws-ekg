@@ -27,19 +27,19 @@ locals {
   lambda_invoke_crate        = "ekg-lfn-invoke"
   lambda_invoke_crate_path   = "${path.module}/crate/${local.lambda_invoke_crate}"
   lambda_invoke_package_path = "${path.module}/target/lambda/${local.lambda_invoke_crate}"
-  lambda_invoke_zip          = "${local.lambda_invoke_package_path}/../tf-artifact-${local.lambda_invoke_crate}-${var.name}.zip"
+  lambda_invoke_zip          = "${path.module}/target/lambda/tf-artifact-${local.lambda_invoke_crate}-${var.name}.zip"
 
   // The lambda function "load" which is used to instruct the Neptune loader to load an S3-based RDF file
   lambda_load_name         = "${local.full_name}-load"
   lambda_load_crate        = "ekg-lfn-load"
   lambda_load_crate_path   = "${path.module}/crate/${local.lambda_load_crate}"
   lambda_load_package_path = "${path.module}/target/lambda/${local.lambda_load_crate}"
-  lambda_load_zip          = "${local.lambda_invoke_package_path}/../tf-artifact-${local.lambda_load_crate}-${var.name}.zip"
+  lambda_load_zip          = "${path.module}/target/lambda/tf-artifact-${local.lambda_load_crate}-${var.name}.zip"
 
   // The lambda function "check" which is used to check the status of the Neptune load job
   lambda_check_name         = "${local.full_name}-check"
   lambda_check_crate        = "ekg-lfn-check"
   lambda_check_crate_path   = "${path.module}/crate/${local.lambda_check_crate}"
   lambda_check_package_path = "${path.module}/target/lambda/${local.lambda_check_crate}"
-  lambda_check_zip          = "${local.lambda_check_package_path}/../tf-artifact-${local.lambda_check_crate}-${var.name}.zip"
+  lambda_check_zip          = "${path.module}/target/lambda/tf-artifact-${local.lambda_check_crate}-${var.name}.zip"
 }

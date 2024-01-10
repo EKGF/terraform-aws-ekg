@@ -27,13 +27,15 @@ tokio.workspace = true
 serde.workspace = true
 unreachable.workspace = true
 simple-error.workspace = true
-ekg-error.workspace = true
-ekg-identifier.workspace = true
-ekg-util.workspace = true
-ekg-aws-util.workspace = true
 webpki-roots.workspace = true
 rustls.workspace = true
 hyper-rustls.workspace = true
+ekg-error.workspace = true
+ekg-identifier.workspace = true
+ekg-namespace.workspace = true
+ekg-util.workspace = true
+ekg-sparql.workspace = true
+ekg-aws-util.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

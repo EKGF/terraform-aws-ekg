@@ -33,18 +33,21 @@ impl EkgIdentifierContexts {
 
     // #[cfg(test)]
     pub fn default_test() {
-        std::env::set_var("EKG_BASE_INTERNAL", "https://placeholder.kg");
+        std::env::set_var(
+            "EKG_BASE_INTERNAL",
+            ekg_namespace::PLACEHOLDER_BASE_IRI,
+        );
         std::env::set_var(
             "EKG_ID_BASE_INTERNAL",
-            "https://placeholder.kg/id",
+            ekg_namespace::PLACEHOLDER_ID_BASE_IRI,
         );
         std::env::set_var(
             "EKG_GRAPH_BASE_INTERNAL",
-            "https://placeholder.kg/graph",
+            ekg_namespace::PLACEHOLDER_GRAPH_BASE_IRI,
         );
         std::env::set_var(
             "EKG_ONTOLOGY_BASE_INTERNAL",
-            "https://placeholder.kg/ontology",
+            ekg_namespace::PLACEHOLDER_ONTOLOGY_BASE_IRI,
         );
         std::env::set_var("EKG_BASE_EXTERNAL", "http://localhost:3000");
         std::env::set_var("EKG_ID_BASE_EXTERNAL", "http://localhost:3000/id");
