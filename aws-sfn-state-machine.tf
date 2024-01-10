@@ -29,6 +29,11 @@ resource "aws_sfn_state_machine" "rdf_load" {
                   },
                   {
                       "Variable": "$.LoadOutput.detailError",
+                      "StringEquals": "Timeout",
+                      "Next": "RetryLoadInstruction"
+                  },
+                  {
+                      "Variable": "$.LoadOutput.detailError",
                       "StringEquals": "MaxLoadTaskQueueSizeLimitBreached",
                       "Next": "RetryLoadInstruction"
                   },
@@ -42,8 +47,8 @@ resource "aws_sfn_state_machine" "rdf_load" {
           },
           "RetryLoadInstruction": {
               "Type": "Wait",
-              "Comment": "Wait 20 seconds and then retry the instruction to the Neptune bulk loader",
-              "Seconds": 20,
+              "Comment": "Wait a random number of seconds, as suggested by the load lambda function, and then retry the instruction to the Neptune bulk loader",
+              "SecondsPath": "$.LoadOutput.suggestedRetrySeconds",
               "Next": "InstructNeptuneToLoad"
           },
           "CheckIfLoaderFinished": {

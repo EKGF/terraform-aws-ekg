@@ -120,3 +120,4 @@ chrono = { version = "0.4.23", features = ["serde"] }
 num_enum = "0.7.0"
 phf = { version = "0.11", features = ["macros"] }
 fancy-regex = { version = "0.13.0", default-features = true }
+rand = "0.8.5"

@@ -30,6 +30,7 @@ rustls.workspace = true
 hyper-rustls.workspace = true
 hyper.workspace = true
 webpki-roots.workspace = true
+rand.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

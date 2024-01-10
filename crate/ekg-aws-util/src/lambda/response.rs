@@ -1,13 +1,15 @@
-use aws_sdk_neptunedata::operation::get_loader_job_status::GetLoaderJobStatusError;
-
 use {
     crate::lambda::LambdaDetailError,
     aws_sdk_neptunedata::{
         error::SdkError,
-        operation::start_loader_job::{StartLoaderJobError, StartLoaderJobOutput},
+        operation::{
+            get_loader_job_status::GetLoaderJobStatusError,
+            start_loader_job::{StartLoaderJobError, StartLoaderJobOutput},
+        },
         types::error::BadRequestException,
     },
     aws_smithy_runtime_api::client::result::TimeoutError,
+    rand::Rng,
     serde::{Deserialize, Serialize},
 };
 
@@ -15,16 +17,21 @@ use {
 #[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LambdaResponse {
-    pub status_code: u16,
-    pub message: String,
+    pub status_code:             u16,
+    pub message:                 String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub detailed_message: Option<String>,
+    pub detailed_message:        Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail_error: Option<LambdaDetailError>,
+    pub detail_error:            Option<LambdaDetailError>,
     /// A generic slot that can be used to pass back a result identifier
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub result_identifier: Option<String>,
+    pub result_identifier:       Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggested_retry_seconds: Option<u16>,
 }
+
+const MIN_RETRY_WAIT_SECONDS: u16 = 10;
+const MAX_RETRY_WAIT_SECONDS: u16 = 60;
 
 impl LambdaResponse {
     pub fn clean(&mut self) {
@@ -32,6 +39,13 @@ impl LambdaResponse {
         if Some(self.message.as_str()) == self.detailed_message.as_deref() {
             self.detailed_message = None;
         }
+        // Suggest a random number of seconds to wait before retrying the request
+        // in case of a recognized error. Since the Neptune loader queue has 64 slots
+        // we don't want all hundreds of other requests to wait the same amount of time
+        // before trying again adding their requests to that limited queue.
+        let mut rng = rand::thread_rng();
+        self.suggested_retry_seconds =
+            Some(rng.gen_range(MIN_RETRY_WAIT_SECONDS..MAX_RETRY_WAIT_SECONDS))
     }
 
     pub fn ok(message: &str, detailed_message: Option<&str>) -> Self {
@@ -85,9 +99,11 @@ impl From<TimeoutError> for LambdaResponse {
 impl<R> From<SdkError<StartLoaderJobError, R>> for LambdaResponse {
     fn from(error: SdkError<StartLoaderJobError, R>) -> Self {
         match error {
-            SdkError::ServiceError(service_error) => match service_error.err() {
-                StartLoaderJobError::BadRequestException(exc) => exc.into(),
-                source @ _ => source.into(),
+            SdkError::ServiceError(service_error) => {
+                match service_error.err() {
+                    StartLoaderJobError::BadRequestException(exc) => exc.into(),
+                    source @ _ => source.into(),
+                }
             },
             SdkError::TimeoutError(timeout_error) => timeout_error.into(),
             _ => {
