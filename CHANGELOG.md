@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.9](https://github.com/EKGF/terraform-neptune/compare/0.0.8..0.0.9) - 2024-01-10
+#### Features
+- **(sparql)** donated agnos.ai code to EKGF (crates ekg-sparql and ekg-namespace). ekg-lfn-load crate now updates Neptune using SPARQL with load request information. - ([6a5f588](https://github.com/EKGF/terraform-neptune/commit/6a5f5889186a508704325d738eba61bc809a3bc0)) - [@jgeluk](https://github.com/jgeluk)
+#### Refactoring
+- **(neptune)** renamed LoadRequest - ([f9207a4](https://github.com/EKGF/terraform-neptune/commit/f9207a426f60a7a513749c26bfc496152dba55ea)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.8](https://github.com/EKGF/terraform-neptune/compare/0.0.7..0.0.8) - 2024-01-05
 #### Miscellaneous Chores
 - **(ci)** updated .gitignore - ([ba333b5](https://github.com/EKGF/terraform-neptune/commit/ba333b5cd92785fbcd1cbf5ac5f98e925a54d22e)) - [@jgeluk](https://github.com/jgeluk)
