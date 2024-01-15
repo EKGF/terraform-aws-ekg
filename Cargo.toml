@@ -115,6 +115,7 @@ hyper-rustls = { version = "=0.25", default-features = false, features = ["http2
 hyper-util = { version = "0.1.2", default-features = false, features = ["client", "client-legacy", "http2"] }
 webpki-roots = "0.26.0"
 mime = "0.3.17"
+fluent-uri = "0.1.4"
 #
 # Other Stuff
 #

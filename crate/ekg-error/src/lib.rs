@@ -280,6 +280,9 @@ pub enum Error {
     InvalidUri(#[from] hyper::http::uri::InvalidUri),
 
     #[error(transparent)]
+    InvalidUri2(#[from] fluent_uri::ParseError),
+
+    #[error(transparent)]
     SerdeUrlEncodingError(#[from] serde_urlencoded::ser::Error),
 
     #[error("Unknown data type {data_type_id}")]

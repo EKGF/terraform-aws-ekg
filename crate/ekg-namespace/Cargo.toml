@@ -26,6 +26,7 @@ fancy-regex.workspace = true
 mime.workspace = true
 serde.workspace = true
 serde_urlencoded.workspace = true
+fluent-uri.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

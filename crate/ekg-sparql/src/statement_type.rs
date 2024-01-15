@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use crate::SPARQLFlavor;
+use {crate::SPARQLFlavor, ekg_namespace::IRIref};
 
 #[allow(missing_docs)]
 #[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
@@ -14,7 +14,7 @@ pub enum SPARQLStatementType {
 }
 
 impl SPARQLStatementType {
-    pub fn from_iri(iri: Option<hyper::Uri>, flavor: SPARQLFlavor) -> Option<Self> {
+    pub fn from_iri(iri: Option<IRIref>, flavor: SPARQLFlavor) -> Option<Self> {
         match iri {
             Some(iri) if iri == *ekg_namespace::IRI_SELECT => Some(Self::SELECT(flavor)),
             Some(iri) if iri == *ekg_namespace::IRI_ASK => Some(Self::ASK(flavor)),

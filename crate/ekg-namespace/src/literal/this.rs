@@ -37,7 +37,7 @@ impl PartialEq for Literal {
         }
         unsafe {
             if data_type.is_iri() {
-                self.literal_value.iri == other.literal_value.iri
+                self.literal_value.iri.as_str() == other.literal_value.iri.as_str()
             } else if data_type.is_string() {
                 self.literal_value.string == other.literal_value.string
             } else if data_type.is_boolean() {
@@ -71,7 +71,7 @@ impl std::hash::Hash for Literal {
         unsafe {
             #[allow(clippy::if_same_then_else)]
             if data_type.is_iri() {
-                self.literal_value.iri.hash(state)
+                self.literal_value.iri.as_str().hash(state)
             } else if data_type.is_string() {
                 self.literal_value.string.hash(state)
             } else if data_type.is_blank_node() {
@@ -138,11 +138,7 @@ impl Debug for Literal {
 impl Display for Literal {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.data_type.is_iri() {
-            if let Some(iri) = self.as_iri() {
-                crate::write_iri(f, &iri)
-            } else {
-                write!(f, "ERROR, could not convert to IRI")
-            }
+            write!(f, "{}", self.as_iri().unwrap())
         } else if self.data_type.is_blank_node() {
             write!(f, "_:{}", self.as_string().unwrap().as_str())
         } else if self.data_type.is_string() {
@@ -176,7 +172,7 @@ impl Clone for Literal {
             if let Some(ref iri) = self.as_iri() {
                 Literal {
                     data_type:     self.data_type,
-                    literal_value: LiteralValue::new_iri(iri),
+                    literal_value: LiteralValue::new_iri(iri.borrow()),
                 }
             } else {
                 todo!("the situation where the iri in a lexical value is empty")
@@ -311,7 +307,7 @@ impl Literal {
         }
     }
 
-    pub fn as_iri(&self) -> Option<hyper::Uri> {
+    pub fn as_iri(&self) -> Option<fluent_uri::Uri<String>> {
         if self.data_type.is_iri() {
             Some(unsafe { self.literal_value.iri.deref().clone() })
         } else {
@@ -319,9 +315,9 @@ impl Literal {
         }
     }
 
-    pub fn as_iri_ref(&self) -> Option<&hyper::Uri> {
+    pub fn as_iri_ref(&self) -> Option<&fluent_uri::Uri<&str>> {
         if self.data_type.is_iri() {
-            Some(unsafe { &self.literal_value.iri })
+            Some(unsafe { &self.literal_value.iri.borrow() })
         } else {
             None
         }
@@ -459,7 +455,7 @@ impl Literal {
     pub fn from_type_and_buffer(
         data_type: DataType,
         buffer: &str,
-        id_base_iri: Option<&hyper::Uri>,
+        id_base_iri: Option<&fluent_uri::Uri<&str>>,
     ) -> Result<Option<Literal>, ekg_error::Error> {
         match data_type {
             DataType::AnyUri | DataType::IriReference => {
@@ -470,7 +466,7 @@ impl Literal {
                         id_base_iri,
                     )
                 }
-                if let Ok(iri) = hyper::Uri::from_str(buffer) {
+                if let Ok(iri) = fluent_uri::Uri::parse(buffer) {
                     Ok(Some(Literal::new_iri_with_datatype(
                         &iri, data_type,
                     )?))
@@ -481,7 +477,7 @@ impl Literal {
                         id_base_iri,
                     )?))
                 } else {
-                    match hyper::Uri::from_str(buffer) {
+                    match fluent_uri::Uri::parse(buffer) {
                         Ok(iri) => {
                             tracing::error!(
                                 target: crate::consts::LOG_TARGET_DATABASE,
@@ -640,10 +636,10 @@ impl Literal {
         Err(ekg_error::Error::Unknown) // TODO
     }
 
-    pub fn from_iri(iri: &hyper::Uri) -> Result<Self, ekg_error::Error> {
+    pub fn from_iri(iri: &fluent_uri::Uri<&str>) -> Result<Self, ekg_error::Error> {
         Ok(Literal {
             data_type:     DataType::IriReference,
-            literal_value: LiteralValue { iri: ManuallyDrop::new(iri.clone()) },
+            literal_value: LiteralValue { iri: ManuallyDrop::new(iri.to_owned()) },
         })
     }
 
@@ -733,18 +729,18 @@ impl Literal {
     pub fn new_iri_from_string_with_datatype(
         iri_string: &str,
         data_type: DataType,
-        id_base_iri: Option<&hyper::Uri>,
+        id_base_iri: Option<&fluent_uri::Uri<&str>>,
     ) -> Result<Self, ekg_error::Error> {
-        match hyper::Uri::from_str(iri_string) {
+        match fluent_uri::Uri::parse(iri_string) {
             Ok(ref iri) => Self::new_iri_with_datatype(iri, data_type),
             Err(error) => {
                 if let Some(id_base_iri) = id_base_iri {
                     // If we passed a base IRI and the given IRI string is just an identifier,
                     // then stick the base IRI in front of it
-                    return Self::from_iri(&hyper::Uri::try_from(format!(
-                        "{}/{}",
-                        id_base_iri, iri_string,
-                    ))?)
+                    let iri_str =
+                        fluent_uri::Uri::parse_from(format!("{}/{}", id_base_iri, iri_string))
+                            .map_err(|(_s, e)| e)?;
+                    return Self::from_iri(iri_str.borrow())
                 }
                 Err(ekg_error::Error::from(error))
             },
@@ -752,12 +748,12 @@ impl Literal {
     }
 
     pub fn new_iri_reference_from_str(iri: &str) -> Result<Self, ekg_error::Error> {
-        let iri = hyper::Uri::from_str(iri)?;
+        let iri = fluent_uri::Uri::parse(iri)?;
         Self::new_iri_with_datatype(&iri, DataType::IriReference)
     }
 
     pub fn new_iri_with_datatype(
-        iri: &hyper::Uri,
+        iri: &fluent_uri::Uri<&str>,
         data_type: DataType,
     ) -> Result<Self, ekg_error::Error> {
         assert!(
@@ -870,9 +866,7 @@ impl Literal {
                 let data_type = self.0.data_type;
                 unsafe {
                     if data_type.is_iri() {
-                        write!(f, "<")?;
-                        crate::write_iri(f, &*self.0.literal_value.iri)?;
-                        write!(f, ">")?
+                        write!(f, "<{}>", self.0.literal_value.iri.as_str())?
                     } else if data_type.is_string() {
                         write!(f, "\"{}\"", self.0.literal_value.string.as_str())?
                     } else if data_type.is_blank_node() {
@@ -956,12 +950,15 @@ impl Literal {
 
     pub fn as_url_display(&self) -> LiteralUrlDisplay { LiteralUrlDisplay { literal: self } }
 
-    pub fn as_id_url_display<'a>(&'a self, id_base_iri: &'a hyper::Uri) -> LiteralIdUrlDisplay {
+    pub fn as_id_url_display<'a>(
+        &'a self,
+        id_base_iri: &'a fluent_uri::Uri<&'a str>,
+    ) -> LiteralIdUrlDisplay {
         LiteralIdUrlDisplay { literal: self, id_base_iri }
     }
 
     /// Is the given Literal an IRI whose base is the given IRI?
-    pub fn is_id_iri(&self, id_base_iri: &hyper::Uri) -> bool {
+    pub fn is_id_iri(&self, id_base_iri: &fluent_uri::Uri<&str>) -> bool {
         match self.data_type {
             DataType::AnyUri | DataType::IriReference => unsafe {
                 self.literal_value
@@ -973,7 +970,7 @@ impl Literal {
         }
     }
 
-    pub fn as_id(&self, id_base_iri: &hyper::Uri) -> Result<String, ekg_error::Error> {
+    pub fn as_id(&self, id_base_iri: &fluent_uri::Uri<&str>) -> Result<String, ekg_error::Error> {
         match self.data_type {
             DataType::AnyUri | DataType::IriReference => unsafe {
                 let len = id_base_iri.to_string().len();

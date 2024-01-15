@@ -49,7 +49,7 @@ impl Graph {
         )
     }
 
-    pub fn as_iri(&self) -> Result<hyper::Uri, ekg_error::Error> {
+    pub fn as_iri(&self) -> Result<fluent_uri::Uri<String>, ekg_error::Error> {
         self.namespace
             .with_local_name(self.local_name.as_str())
             .map_err(ekg_error::Error::from)
@@ -65,7 +65,7 @@ impl Graph {
     }
 
     pub fn as_lexical_value(&self) -> Result<Literal, ekg_error::Error> {
-        Literal::from_iri(&self.as_iri()?)
+        Literal::from_iri(&self.as_iri()?.borrow())
     }
 }
 
@@ -88,7 +88,7 @@ impl<'a> std::fmt::Display for GraphDisplayIRI<'a> {
 mod tests {
     #[test]
     fn test_display_iri() {
-        let ns = hyper::Uri::from_static("https://whatever.kom/graph/");
+        let ns = fluent_uri::Uri::from_static("https://whatever.kom/graph/");
         let graph_prefix = crate::Namespace::declare("graph:", &ns);
         let graph = crate::Graph::declare(graph_prefix, "somedataset");
 
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_graph_ns() {
-        let ns = hyper::Uri::from_static("https://whatever.kom/graph/");
+        let ns = fluent_uri::Uri::from_static("https://whatever.kom/graph/");
         let graph_prefix = crate::Namespace::declare("kggraph:", &ns);
 
         let graph = crate::Graph::declare(graph_prefix, "somedataset");

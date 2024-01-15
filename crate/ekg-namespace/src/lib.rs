@@ -3,7 +3,7 @@ pub use {
     consts::*,
     data_type::DataType,
     graph::{Graph, GraphDisplayIRI},
-    literal::{write_iri, Literal, LiteralIdUrlDisplay, LiteralUrlDisplay, LiteralValue},
+    literal::{Literal, LiteralIdUrlDisplay, LiteralUrlDisplay, LiteralValue},
     namespace::Namespace,
     predicate::Predicate,
     term::Term,
@@ -17,3 +17,7 @@ mod literal;
 mod namespace;
 mod predicate;
 mod term;
+
+pub type StaticIRI = fluent_uri::Uri<&'static str>;
+pub type IRIref<'a> = &'a fluent_uri::Uri<&'a str>;
+pub type OwnedIRI = fluent_uri::Uri<String>;

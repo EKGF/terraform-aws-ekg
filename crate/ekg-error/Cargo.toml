@@ -27,6 +27,7 @@ ignore = { workspace = true, optional = true }
 iref = { workspace = true, optional = true }
 hyper.workspace = true
 spargebra.workspace = true
+fluent-uri.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.spargebra]
 version = "0.2.7"

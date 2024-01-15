@@ -2,7 +2,7 @@ use {
     crate::{ParsedStatement, Statement},
     ekg_error::Error,
     ekg_util::env::mandatory_env_var,
-    hyper::Uri,
+    fluent_uri::Uri,
 };
 
 /// Simple SPARQL client for sending SPARQL queries (or update statements) to a
@@ -13,8 +13,8 @@ pub struct SPARQLClient {
         hyper_rustls::HttpsConnector<hyper::client::HttpConnector>,
         hyper::Body,
     >,
-    pub(crate) query_endpoint:  Uri,
-    pub(crate) update_endpoint: Uri,
+    pub(crate) query_endpoint:  Uri<String>,
+    pub(crate) update_endpoint: Uri<String>,
 }
 
 impl SPARQLClient {
@@ -23,13 +23,16 @@ impl SPARQLClient {
         let update_endpoint = mandatory_env_var("EKG_SPARQL_UPDATE_ENDPOINT", None)?;
 
         Self::new(
-            query_endpoint.try_into()?,
-            Some(update_endpoint.try_into()?),
+            Uri::parse(query_endpoint.as_str()),
+            Some(Uri::parse(update_endpoint.as_str()),
         )
         .await
     }
 
-    pub async fn new(query_endpoint: Uri, update_endpoint: Option<Uri>) -> Result<Self, Error> {
+    pub async fn new(
+        query_endpoint: &Uri<&str>,
+        update_endpoint: Option<&Uri<&str>>,
+    ) -> Result<Self, Error> {
         let tls_connector = ekg_util::tls_connector::create().await?;
 
         // Build the hyper client from the HTTPS connector.
@@ -38,11 +41,11 @@ impl SPARQLClient {
 
         Ok(Self {
             client:          http_client,
-            query_endpoint:  query_endpoint.clone(),
+            query_endpoint:  query_endpoint.to_owned(),
             update_endpoint: if let Some(update_endpoint) = update_endpoint {
-                update_endpoint
+                update_endpoint.to_owned()
             } else {
-                query_endpoint.clone()
+                query_endpoint.to_owned()
             },
         })
     }

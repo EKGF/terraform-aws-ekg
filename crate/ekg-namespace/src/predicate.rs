@@ -42,7 +42,7 @@ mod tests {
     fn test_predicate() {
         let ns = Namespace::declare(
             "abc:",
-            &hyper::Uri::from_static("https://whatever.kg/def/"),
+            &fluent_uri::Uri::from_static("https://whatever.kg/def/"),
         );
         let prd = Predicate::declare(&ns, "xyz");
 

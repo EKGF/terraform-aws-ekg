@@ -24,11 +24,12 @@ impl Class {
         Self { namespace, local_name: local_name.to_string() }
     }
 
-    pub fn as_iri(&self) -> Result<hyper::Uri, ekg_error::Error> {
-        let iri = hyper::Uri::try_from(format!(
+    pub fn as_iri(&self) -> Result<fluent_uri::Uri<String>, ekg_error::Error> {
+        let iri = fluent_uri::Uri::parse_from(format!(
             "{}{}",
             self.namespace.iri, self.local_name
-        ))?;
+        ))
+        .map_err(|(_s, e)| ekg_error::Error::from(e))?;
         Ok(iri)
     }
 
@@ -52,9 +53,9 @@ impl Class {
     // TODO: Make this slightly smarter
 
     pub fn is_literal(&self, literal: &Literal) -> bool {
-        if let Some(that_iri) = literal.as_iri() {
+        if let Some(that_iri) = literal.as_iri_ref() {
             if let Ok(this_iri) = self.as_iri() {
-                that_iri == this_iri
+                that_iri.as_str() == this_iri.borrow().as_str()
             } else {
                 let iri = self.to_string();
                 literal.to_string() == iri
@@ -76,7 +77,7 @@ mod tests {
     fn test_a_class_01() {
         let namespace = Namespace::declare(
             "test:",
-            &hyper::Uri::from_static("https://whatever.com/test#"),
+            &fluent_uri::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let s = format!("{:}", class);
@@ -87,7 +88,7 @@ mod tests {
     fn test_a_class_02() {
         let namespace = Namespace::declare(
             "test:",
-            &hyper::Uri::from_static("https://whatever.com/test#"),
+            &fluent_uri::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let s = format!("{}", class.as_iri().unwrap());
@@ -98,7 +99,7 @@ mod tests {
     fn test_is_literal() {
         let namespace = Namespace::declare(
             "test:",
-            &hyper::Uri::from_static("https://whatever.com/test#"),
+            &fluent_uri::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let literal = Literal::from_type_and_buffer(

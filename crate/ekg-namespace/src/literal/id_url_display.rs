@@ -5,7 +5,7 @@ use {
 
 pub struct LiteralIdUrlDisplay<'a> {
     pub(crate) literal:     &'a Literal,
-    pub(crate) id_base_iri: &'a hyper::Uri,
+    pub(crate) id_base_iri: &'a fluent_uri::Uri<&'a str>,
 }
 
 impl<'a> Display for LiteralIdUrlDisplay<'a> {

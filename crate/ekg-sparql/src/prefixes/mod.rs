@@ -72,7 +72,7 @@ impl Prefixes {
     pub fn declare(
         &mut self,
         name: &str,
-        iri: &hyper::Uri,
+        iri: &fluent_uri::Uri<&str>,
     ) -> Result<PrefixesDeclareResult, ekg_error::Error> {
         self.declare_namespace(&Namespace::declare(name, iri))
     }

@@ -2,11 +2,12 @@
 
 #[cfg(feature = "serde")]
 use serde_json::json;
-use {crate::literal::this::Literal, std::str::FromStr};
+
+use crate::literal::this::Literal;
 
 #[test]
 fn test_as_local_name_01() -> Result<(), ekg_error::Error> {
-    let val = Literal::from_iri(&hyper::Uri::from_static(
+    let val = Literal::from_iri(&fluent_uri::Uri::from_static(
         "https://whatever.kg/id/abc",
     ));
     assert!(val.is_ok());
@@ -20,7 +21,7 @@ fn test_as_local_name_01() -> Result<(), ekg_error::Error> {
 
 #[test]
 fn test_as_local_name_02() -> Result<(), ekg_error::Error> {
-    let val = Literal::from_iri(&hyper::Uri::from_static(
+    let val = Literal::from_iri(&fluent_uri::Uri::from_static(
         "https://whatever.kg/id#abc",
     ));
     assert!(val.is_ok());
@@ -34,8 +35,8 @@ fn test_as_local_name_02() -> Result<(), ekg_error::Error> {
 
 #[test]
 fn test_id_url_01() -> Result<(), ekg_error::Error> {
-    let id_base_iri = hyper::Uri::from_str("https://whatever.kg/id/")?;
-    let literal = Literal::from_iri(&hyper::Uri::from_static(
+    let id_base_iri = fluent_uri::Uri::from_str("https://whatever.kg/id/")?;
+    let literal = Literal::from_iri(&fluent_uri::Uri::from_static(
         "https://whatever.kg/id/abc",
     ));
     assert!(literal.is_ok());
@@ -48,8 +49,8 @@ fn test_id_url_01() -> Result<(), ekg_error::Error> {
 
 #[test]
 fn test_id_url_02() -> Result<(), ekg_error::Error> {
-    let id_base_iri = hyper::Uri::from_str("https://whatever.kg/id/")?;
-    let literal = Literal::from_iri(&hyper::Uri::from_static(
+    let id_base_iri = fluent_uri::Uri::from_str("https://whatever.kg/id/")?;
+    let literal = Literal::from_iri(&fluent_uri::Uri::from_static(
         "https://whatever.kg/id/abc",
     ));
     assert!(literal.is_ok());
