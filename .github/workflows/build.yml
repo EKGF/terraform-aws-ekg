@@ -1,53 +1,53 @@
-name: build
+name: Build Crates
 
-on: [ push ]
+on:
+  pull_request:
+    paths:
+      - 'crate/**'
+      - 'Cargo.toml'
+      - 'rustfmt.toml'
+      - '.github/workflows/build-crates.yml'
+
+  push:
+    branches: [ 'main' ]
+    tags-ignore: [ '*' ]
+    paths:
+      - 'crate/**'
+      - 'Cargo.toml'
+      - 'rustfmt.toml'
+      - '.github/workflows/build-crates.yml'
+
+  workflow_dispatch:
+
+env:
+  RUST_BACKTRACE: full
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+  CARGO_INCREMENTAL: 0
 
 jobs:
-  build-rdf-load:
-    runs-on: ubuntu-latest
+  test:
+    name: Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        #        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ macos-latest ]
     steps:
-      - name: Check out repository
+      - name: Checkout sources
         uses: actions/checkout@v3
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: lambda/rdf-load/.venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: cd lambda/rdf-load && poetry install --no-interaction --no-root
-      - name: Install project
-        run: |
-          cd lambda/rdf-load
-          source .venv/bin/activate
-          rm -f artifact.zip >/dev/null 2>&1 || true
-          set -x
-          poetry build
-          poetry run python3 -m pip install --upgrade -t .package dist/*.whl
-          cd .package
-          ls -al
-          echo "Zipping it up:"
-          zip -r ../artifact.zip . -x '*.pyc'
-          cd ..
-          ls -al artifact.zip
-      - uses: actions/upload-artifact@v3
-        with:
-          name: artifact
-          path: |
-            lambda/rdf-load/.package
-            !lambda/rdf-load/.package/**/*.pyc
-            !lambda/rdf-load/.package/**/__pycache__
-          if-no-files-found: error
 
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - uses: korandoru/setup-zig@v1
+        with:
+          zig-version: 0.11.0
+
+      - name: Configure cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Run cargo test
+        run: cargo test --all-features

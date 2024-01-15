@@ -99,6 +99,7 @@ tokio = { version = "1", default-features = false, features = ["macros", "full"]
 lambda_runtime = { version = "0.9.0", default-features = true }
 aws-config = { version = "1.1.1", default-features = true, features = ["behavior-version-latest"] }
 aws-types = { version = "1.1.1", default-features = false }
+aws-smithy-runtime = { version = "1.1.1", default-features = false, features = ["client", "tls-rustls", "connector-hyper-0-14-x"] }
 aws-smithy-runtime-api = { version = "1.1.1", default-features = true }
 aws-sdk-sfn = { version = "1.9.0", default-features = true, features = ["behavior-version-latest"] }
 aws-sdk-neptune = { version = "1.10.0", default-features = true, features = ["behavior-version-latest"] }
@@ -106,10 +107,13 @@ aws-sdk-neptunedata = { version = "1.9.0", default-features = true, features = [
 #
 # HTTP Stuff
 #
+# Keep the versions of hyper and hyper-rustls in sync with the versions in aws-smithy-runtime
+#
+rustls = { version = "=0.22.2", default-features = false, features = ["logging", "ring", "tls12"] }
+hyper = { version = "=0.14.26", default-features = false, features = ["client", "tcp", "http2", "stream", "runtime", "backports", "deprecated"] }
+hyper-rustls = { version = "=0.25", default-features = false, features = ["http2", "tls12", "webpki-roots", "webpki-tokio", "logging"] }
+hyper-util = { version = "0.1.2", default-features = false, features = ["client", "client-legacy", "http2"] }
 webpki-roots = "0.26.0"
-rustls = "0.21"
-hyper = { version = "0.14", default-features = false, features = ["client", "http2", "stream", "runtime"] }
-hyper-rustls = { version = "0.24", default-features = false, features = ["http2", "tls12", "webpki-roots", "webpki-tokio", "logging"] }
 mime = "0.3.17"
 #
 # Other Stuff

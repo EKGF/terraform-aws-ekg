@@ -20,11 +20,12 @@ mod tests;
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
     ekg_util::tracing::aws_lfn_init();
-    // Get the AWS config
-    let aws_config = aws_config::load_from_env().await;
+    // Get the AWS SDK config
+    let aws_sdk_config = ekg_aws_util::sdk_config::create().await?;
+
     let clients = Clients {
         // Create the NeptuneData client
-        aws_neptunedata_client: ekg_aws_util::neptune::get_neptunedata_client(&aws_config)?,
+        aws_neptunedata_client: ekg_aws_util::neptune::get_neptunedata_client(&aws_sdk_config)?,
         // Create the HTTP SPARQL client (which strangely enough is not part of the
         // aws_sdk_neptunedata or aws_sdk_neptune crates, we had to build one ourselves)
         sparql_client:          ekg_sparql::SPARQLClient::from_env().await?,

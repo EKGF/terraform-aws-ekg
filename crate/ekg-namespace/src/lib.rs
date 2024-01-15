@@ -3,7 +3,7 @@ pub use {
     consts::*,
     data_type::DataType,
     graph::{Graph, GraphDisplayIRI},
-    literal::{Literal, LiteralIdUrlDisplay, LiteralUrlDisplay, LiteralValue},
+    literal::{write_iri, Literal, LiteralIdUrlDisplay, LiteralUrlDisplay, LiteralValue},
     namespace::Namespace,
     predicate::Predicate,
     term::Term,

@@ -35,6 +35,10 @@ pub enum Error {
     MandatoryEnvironmentVariableMissing(String),
 
     #[allow(dead_code)]
+    #[error("Service error {0}")]
+    ServiceError(String),
+
+    #[allow(dead_code)]
     #[error("No event")]
     NoEvent,
 

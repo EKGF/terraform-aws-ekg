@@ -104,7 +104,7 @@ impl Debug for Literal {
         unsafe {
             #[allow(clippy::if_same_then_else)]
             if data_type.is_iri() {
-                write!(f, "<{:}{}", *self.literal_value.iri, ")")?
+                write!(f, "{}", self)?
             } else if data_type.is_string() {
                 write!(f, "\"{}\"", self.literal_value.string.as_str())?
             } else if data_type.is_blank_node() {
@@ -138,7 +138,11 @@ impl Debug for Literal {
 impl Display for Literal {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.data_type.is_iri() {
-            write!(f, "<{}>", self.as_iri().unwrap())
+            if let Some(iri) = self.as_iri() {
+                crate::write_iri(f, &iri)
+            } else {
+                write!(f, "ERROR, could not convert to IRI")
+            }
         } else if self.data_type.is_blank_node() {
             write!(f, "_:{}", self.as_string().unwrap().as_str())
         } else if self.data_type.is_string() {
@@ -866,7 +870,9 @@ impl Literal {
                 let data_type = self.0.data_type;
                 unsafe {
                     if data_type.is_iri() {
-                        write!(f, "<{}>", *self.0.literal_value.iri)?
+                        write!(f, "<")?;
+                        crate::write_iri(f, &*self.0.literal_value.iri)?;
+                        write!(f, ">")?
                     } else if data_type.is_string() {
                         write!(f, "\"{}\"", self.0.literal_value.string.as_str())?
                     } else if data_type.is_blank_node() {

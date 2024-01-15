@@ -20,8 +20,9 @@ impl StateMachine {
             .send()
             .await
             .map_err(|err| {
-                tracing::error!("Error starting step function: {:}", err);
-                Error::Unknown
+                let msg = format!("Error starting step function: {:}", err);
+                tracing::error!(msg);
+                Error::ServiceError(msg)
             })?;
         tracing::info!("Step function started: {:}", output.execution_arn);
         Ok(())

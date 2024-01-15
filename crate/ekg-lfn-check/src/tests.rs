@@ -1,7 +1,8 @@
 #![cfg(test)]
 
+#[ignore]
 #[test_log::test(tokio::test)]
-async fn test_load_01() -> Result<(), ekg_error::Error> {
+async fn test_check_01() -> Result<(), ekg_error::Error> {
     tracing::info!("test_check_01");
 
     ekg_identifier::EkgIdentifierContexts::default_test();

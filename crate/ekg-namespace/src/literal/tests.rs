@@ -6,7 +6,9 @@ use {crate::literal::this::Literal, std::str::FromStr};
 
 #[test]
 fn test_as_local_name_01() -> Result<(), ekg_error::Error> {
-    let val = Literal::from_iri(hyper::Uri::from_static("https://whatever.kg/id/abc")?.as_iri());
+    let val = Literal::from_iri(&hyper::Uri::from_static(
+        "https://whatever.kg/id/abc",
+    ));
     assert!(val.is_ok());
     let val = val.unwrap();
     let name = val.as_local_name();
@@ -18,7 +20,9 @@ fn test_as_local_name_01() -> Result<(), ekg_error::Error> {
 
 #[test]
 fn test_as_local_name_02() -> Result<(), ekg_error::Error> {
-    let val = Literal::from_iri(hyper::Uri::from_static("https://whatever.kg/id#abc")?.as_iri());
+    let val = Literal::from_iri(&hyper::Uri::from_static(
+        "https://whatever.kg/id#abc",
+    ));
     assert!(val.is_ok());
     let val = val.unwrap();
     let name = val.as_local_name();
@@ -31,12 +35,13 @@ fn test_as_local_name_02() -> Result<(), ekg_error::Error> {
 #[test]
 fn test_id_url_01() -> Result<(), ekg_error::Error> {
     let id_base_iri = hyper::Uri::from_str("https://whatever.kg/id/")?;
-    let literal =
-        Literal::from_iri(hyper::Uri::from_static("https://whatever.kg/id/abc")?.as_iri());
+    let literal = Literal::from_iri(&hyper::Uri::from_static(
+        "https://whatever.kg/id/abc",
+    ));
     assert!(literal.is_ok());
     let literal = literal.unwrap();
     assert!(literal.is_id_iri(&id_base_iri));
-    let id = literal.as_id(&id_base_iri);
+    let id = literal.as_id(&id_base_iri)?;
     assert_eq!(id, "abc");
     Ok(())
 }
@@ -44,8 +49,9 @@ fn test_id_url_01() -> Result<(), ekg_error::Error> {
 #[test]
 fn test_id_url_02() -> Result<(), ekg_error::Error> {
     let id_base_iri = hyper::Uri::from_str("https://whatever.kg/id/")?;
-    let literal =
-        Literal::from_iri(hyper::Uri::from_static("https://whatever.kg/id/abc")?.as_iri());
+    let literal = Literal::from_iri(&hyper::Uri::from_static(
+        "https://whatever.kg/id/abc",
+    ));
     assert!(literal.is_ok());
     let literal = literal.unwrap();
     assert!(literal.is_id_iri(&id_base_iri));

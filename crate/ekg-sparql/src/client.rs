@@ -30,26 +30,7 @@ impl SPARQLClient {
     }
 
     pub async fn new(query_endpoint: Uri, update_endpoint: Option<Uri>) -> Result<Self, Error> {
-        // Let webpki load the Mozilla root certificates.
-        let mut root_store = rustls::RootCertStore::empty();
-        root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
-            rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
-                ta.subject.to_vec(),
-                ta.subject_public_key_info.to_vec(),
-                ta.name_constraints.clone().map(|v| v.to_vec()),
-            )
-        }));
-
-        let tls_config = rustls::ClientConfig::builder()
-            .with_safe_defaults()
-            .with_root_certificates(root_store)
-            .with_no_client_auth();
-
-        let tls_connector = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_tls_config(tls_config)
-            .https_only()
-            .enable_http2()
-            .build();
+        let tls_connector = ekg_util::tls_connector::create().await?;
 
         // Build the hyper client from the HTTPS connector.
         let builder = hyper::client::Client::builder();
@@ -117,18 +98,20 @@ impl SPARQLClient {
         let req = self.build_request(statement).await?;
         match self.client.request(req).await {
             Ok(response) => {
-                tracing::info!("response1: {:?}", response);
+                let status_code = response.status();
                 let (parts, body) = response.into_parts();
-                tracing::info!(
-                    "response2: status={:} headers={:#?}",
-                    parts.status.as_str(),
-                    parts.headers
-                );
+                if !status_code.is_success() {
+                    tracing::info!(
+                        "response: status={:} headers={:?}",
+                        parts.status.as_str(),
+                        parts.headers
+                    );
+                }
                 // TODO: limit the amount of memory used here
                 let body_bytes = hyper::body::to_bytes(body).await?;
                 let v: serde_json::Value = serde_json::from_slice::<serde_json::Value>(&body_bytes)
                     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-                tracing::info!("response3: {:?}", v);
+                tracing::info!("response3: {:?}", serde_json::to_string(&v));
                 Ok(())
             },
             Err(error) => {

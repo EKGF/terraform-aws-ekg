@@ -76,7 +76,7 @@ mod tests {
     fn test_a_class_01() {
         let namespace = Namespace::declare(
             "test:",
-            hyper::Uri::from_static("https://whatever.com/test#"),
+            &hyper::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let s = format!("{:}", class);
@@ -87,7 +87,7 @@ mod tests {
     fn test_a_class_02() {
         let namespace = Namespace::declare(
             "test:",
-            hyper::Uri::from_static("https://whatever.com/test#"),
+            &hyper::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let s = format!("{}", class.as_iri().unwrap());
@@ -98,7 +98,7 @@ mod tests {
     fn test_is_literal() {
         let namespace = Namespace::declare(
             "test:",
-            hyper::Uri::from_static("https://whatever.com/test#"),
+            &hyper::Uri::from_static("https://whatever.com/test#"),
         );
         let class = Class::declare(namespace, "SomeClass");
         let literal = Literal::from_type_and_buffer(
@@ -109,7 +109,7 @@ mod tests {
         .unwrap();
         assert!(literal.is_some());
         assert_eq!(
-            class.as_iri().unwrap().as_str(),
+            class.as_iri().unwrap().to_string().as_str(),
             "https://whatever.com/test#SomeClass"
         );
         assert!(class.is_literal(&literal.unwrap()))

@@ -36,16 +36,13 @@ impl<'a> Predicate<'a> {
 
 #[cfg(test)]
 mod tests {
-    use {
-        crate::{Namespace, Predicate},
-        iref::Iri,
-    };
+    use crate::{Namespace, Predicate};
 
     #[test]
     fn test_predicate() {
         let ns = Namespace::declare(
             "abc:",
-            Uri::from_static("https://whatever.kg/def/"),
+            &hyper::Uri::from_static("https://whatever.kg/def/"),
         );
         let prd = Predicate::declare(&ns, "xyz");
 

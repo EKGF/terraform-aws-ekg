@@ -22,6 +22,11 @@ aws-smithy-runtime-api.workspace = true
 aws-sdk-neptunedata.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+webpki-roots.workspace = true
+rustls.workspace = true
+hyper.workspace = true
+hyper-rustls.workspace = true
+hyper-util.workspace = true
 ekg-error.workspace = true
 
 [dev-dependencies]

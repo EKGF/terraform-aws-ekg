@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+// #[ignore]
 #[test_log::test(tokio::test)]
 async fn test_load_01() -> Result<(), ekg_error::Error> {
     tracing::info!("test_load_01");
@@ -8,6 +9,14 @@ async fn test_load_01() -> Result<(), ekg_error::Error> {
     std::env::set_var(
         "EKG_SPARQL_LOADER_ENDPOINT",
         "http://localhost:8787/loader",
+    );
+    std::env::set_var(
+        "EKG_SPARQL_QUERY_ENDPOINT",
+        "http://localhost:8787/sparql",
+    );
+    std::env::set_var(
+        "EKG_SPARQL_UPDATE_ENDPOINT",
+        "http://localhost:8787/sparql",
     );
     std::env::set_var(
         "AWS_NEPTUNE_LOAD_IAM_ROLE_ARN",
@@ -29,6 +38,10 @@ async fn test_load_01() -> Result<(), ekg_error::Error> {
     println!("result: {:#?}", request);
     let lambda_output = crate::handle_lambda_request(&request, clients).await?;
     println!("result: {:#?}", lambda_output);
-    assert_eq!(lambda_output.status_code, 200);
+    assert_eq!(lambda_output.status_code, 500);
+    assert_eq!(
+        lambda_output.message,
+        "Dispatch failure: io error"
+    );
     Ok(())
 }

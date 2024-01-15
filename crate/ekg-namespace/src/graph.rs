@@ -88,8 +88,8 @@ impl<'a> std::fmt::Display for GraphDisplayIRI<'a> {
 mod tests {
     #[test]
     fn test_display_iri() {
-        let ns = iref::Iri::new("https://whatever.kom/graph/").unwrap();
-        let graph_prefix = crate::Namespace::declare("graph:", ns);
+        let ns = hyper::Uri::from_static("https://whatever.kom/graph/");
+        let graph_prefix = crate::Namespace::declare("graph:", &ns);
         let graph = crate::Graph::declare(graph_prefix, "somedataset");
 
         assert_eq!(
@@ -104,8 +104,8 @@ mod tests {
 
     #[test]
     fn test_graph_ns() {
-        let ns = iref::Iri::new("https://whatever.kom/graph/").unwrap();
-        let graph_prefix = crate::Namespace::declare("kggraph:", ns);
+        let ns = hyper::Uri::from_static("https://whatever.kom/graph/");
+        let graph_prefix = crate::Namespace::declare("kggraph:", &ns);
 
         let graph = crate::Graph::declare(graph_prefix, "somedataset");
         let c_string = graph.as_c_string().unwrap().into_string().unwrap();

@@ -11,3 +11,18 @@ mod tests;
 mod this;
 mod url_display;
 mod value;
+
+// Unfortunately, the hyper:Uri, if it has an empty path
+// prints itself with a slash at the end, which is not
+// what we want for an RDF resource identifier.
+pub fn write_iri(f: &mut std::fmt::Formatter<'_>, iri: &hyper::Uri) -> std::fmt::Result {
+    if iri.path() == "/" {
+        write!(
+            f,
+            "{}",
+            iri.to_string().as_str().strip_suffix("/").unwrap()
+        )
+    } else {
+        write!(f, "{}", iri)
+    }
+}

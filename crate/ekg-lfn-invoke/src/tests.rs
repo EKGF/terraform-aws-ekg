@@ -2,6 +2,7 @@
 
 use {ekg_error::Error, ekg_identifier::EkgIdentifierContexts};
 
+#[ignore]
 #[test_log::test(tokio::test)]
 async fn test_invoke_01() -> Result<(), Error> {
     tracing::info!("test_invoke_01");

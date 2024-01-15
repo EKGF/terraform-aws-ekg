@@ -18,6 +18,7 @@
   "rdf_load_sfn_arn": "arn:aws:states:antartica-01:123456789012:stateMachine:ekgf-dt-dev-metadata-loader",
   "LoadOutput": {
     "statusCode": 200,
-    "message": "Loader job started successfully"
+    "message": "Loader job started successfully",
+    "resultIdentifier": "123456789012"
   }
 }

@@ -14,6 +14,10 @@ pub enum Term {
 }
 
 impl Term {
+    pub fn from_static(iri_str: &'static str) -> Result<Self, ekg_error::Error> {
+        Self::new_iri_from_str(iri_str)
+    }
+
     pub fn new_iri(iri: &hyper::Uri) -> Result<Self, ekg_error::Error> {
         Ok(Term::Iri(Literal::from_iri(iri)?))
     }
@@ -35,9 +39,9 @@ impl Term {
     /// Display a [`Term`] in human readable format.
     ///
     /// ```rust
-    /// use {iref::Iri, rdf_store_rs::Term};
+    /// use ekg_namespace::Term;
     ///
-    /// let term = Term::new_iri(&hyper::Uri::new("https://whatever.url").unwrap()).unwrap();
+    /// let term = Term::new_iri(&hyper::Uri::from_static("https://whatever.url")).unwrap();
     /// let turtle = format!("{}", term.display_turtle());
     ///
     /// assert_eq!(turtle, "<https://whatever.url>");
@@ -71,11 +75,15 @@ impl From<Literal> for Term {
 
 #[cfg(test)]
 mod tests {
-    use {crate::ekg_error::Error, iref::Iri};
-
     #[test_log::test]
     fn test_term_01() {
-        let term = Term::new_iri(&hyper::Uri::new("https://whatever.url").unwrap()).unwrap();
+        let uri = hyper::Uri::from_static("https://whatever.url");
+        // Unfortunately, the hyper::Uri displays itself with a trailing slash
+        // which is not what we want for an RDF resource identifier
+        assert_eq!(format!("{:#?}", uri), "https://whatever.url/");
+        assert_eq!(uri.path(), "/");
+        // So that's one more reason to wrap it into a Term
+        let term = crate::Term::new_iri(&uri).unwrap();
 
         let turtle = format!("{}", term.display_turtle());
 
@@ -84,8 +92,10 @@ mod tests {
 
     #[test_log::test]
     fn test_term_02() {
-        let term =
-            Term::new_iri(&hyper::Uri::new("unknown-protocol://whatever.url").unwrap()).unwrap();
+        let term = crate::Term::new_iri(&hyper::Uri::from_static(
+            "unknown-protocol://whatever.url",
+        ))
+        .unwrap();
 
         let turtle = format!("{}", term.display_turtle());
 
@@ -94,18 +104,18 @@ mod tests {
 
     #[test_log::test]
     fn test_term_03() {
-        // At the moment, we're even accepting wrongly formatted IRIs, we may want to
-        // validate each IRI
-        let term = Term::new_iri(&hyper::Uri::new("https:/x/whatever.url").unwrap()).unwrap();
-
-        let turtle = format!("{}", term.display_turtle());
-
-        assert_eq!(turtle, "<https:/x/whatever.url>");
+        // We are not accepting wrongly formatted IRIs
+        let term = crate::Term::from_static("https:/x/whatever.url");
+        assert!(term.is_err());
+        assert!(matches!(
+            term.unwrap_err(),
+            ekg_error::Error::InvalidUri(_)
+        ));
     }
 
     #[test_log::test]
     fn test_term_04() {
-        let term = Term::new_str("some string").unwrap();
+        let term = crate::Term::new_str("some string").unwrap();
 
         let turtle = format!("{}", term.display_turtle());
 
@@ -114,7 +124,7 @@ mod tests {
 
     #[test_log::test]
     fn test_term_05() -> Result<(), ekg_error::Error> {
-        let term: Term = "some string".parse()?;
+        let term: crate::Term = "some string".parse()?;
 
         let turtle = format!("{}", term.display_turtle());
 
@@ -125,7 +135,7 @@ mod tests {
 
     #[test_log::test]
     fn test_term_06() -> Result<(), ekg_error::Error> {
-        let term: Term = "\"some string\"^^xsd:string".parse()?;
+        let term: crate::Term = "\"some string\"^^xsd:string".parse()?;
 
         let turtle = format!("{}", term.display_turtle());
 

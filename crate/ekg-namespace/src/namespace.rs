@@ -27,7 +27,7 @@ impl Namespace {
             _ => {
                 Self {
                     name: name.to_string(),
-                    iri:  hyper::Uri::try_from(format!("{}/", iri)).unwrap(),
+                    iri:  hyper::Uri::try_from(format!("{}", iri)).unwrap(),
                 }
             },
         }
@@ -68,29 +68,33 @@ impl Namespace {
 
 #[cfg(test)]
 mod tests {
-    use iref::Iri;
-
     #[test_log::test]
     fn test_a_prefix() -> Result<(), ekg_error::Error> {
-        let namespace = Namespace::declare(
+        let namespace = crate::Namespace::declare(
             "test:",
-            Iri::new("http://whatever.kom/test#").unwrap(),
+            &hyper::Uri::from_static("http://whatever.kom/test#"),
         );
         let x = namespace.with_local_name("abc")?;
 
-        assert_eq!(x.as_str(), "http://whatever.kom/test#abc");
+        assert_eq!(
+            x.to_string().as_str(),
+            "http://whatever.kom/test#abc"
+        );
         Ok(())
     }
 
     #[test_log::test]
     fn test_b_prefix() -> Result<(), ekg_error::Error> {
-        let namespace = Namespace::declare(
+        let namespace = crate::Namespace::declare(
             "test:",
-            Iri::new("http://whatever.kom/test/").unwrap(),
+            &hyper::Uri::from_static("http://whatever.kom/test/"),
         );
         let x = namespace.with_local_name("abc")?;
 
-        assert_eq!(x.as_str(), "http://whatever.kom/test/abc");
+        assert_eq!(
+            x.to_string().as_str(),
+            "http://whatever.kom/test/abc"
+        );
         Ok(())
     }
 }

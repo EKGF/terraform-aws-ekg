@@ -1,5 +1,4 @@
 use serde::Deserialize;
-
 pub use {
     s3::{S3Bucket, S3EventRecord, S3EventRecords, S3Object},
     sns::{SnsEventRecord, SnsRecord},
@@ -8,8 +7,11 @@ pub use {
 pub mod lambda;
 pub mod neptune;
 pub mod s3;
+pub mod sdk_config;
 pub mod sns;
+pub mod tls_connector;
 
+mod http;
 #[cfg(test)]
 mod tests;
 
@@ -37,7 +39,7 @@ pub struct ResponseElements {
     pub x_amz_request_id: String,
     /// Amazon S3 host that processed the request
     #[serde(rename = "x-amz-id-2")]
-    pub x_amz_id_2: String,
+    pub x_amz_id_2:       String,
 }
 
 #[derive(Deserialize, Debug)]

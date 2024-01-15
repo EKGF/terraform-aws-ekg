@@ -8,9 +8,19 @@ use {
         },
         types::error::BadRequestException,
     },
-    aws_smithy_runtime_api::client::result::TimeoutError,
+    aws_smithy_runtime_api::{
+        client::result::{
+            ConstructionFailure,
+            DispatchFailure,
+            ResponseError,
+            ServiceError,
+            TimeoutError,
+        },
+        http::Response,
+    },
     rand::Rng,
     serde::{Deserialize, Serialize},
+    std::error::Error,
 };
 
 /// Generic response type that suits most of our lambda functions
@@ -85,35 +95,111 @@ impl From<&StartLoaderJobError> for LambdaResponse {
     }
 }
 
-impl From<TimeoutError> for LambdaResponse {
-    fn from(error: TimeoutError) -> Self {
-        tracing::error!("Timeout Error: {:?}", error);
+impl From<ConstructionFailure> for LambdaResponse {
+    fn from(error: ConstructionFailure) -> Self {
+        let msg = format!("Construction failure: {:?}", error);
+        tracing::error!(msg);
         Self {
             status_code: 504,
-            message: "Timeout".to_string(),
+            message: msg,
             ..Default::default()
         }
     }
 }
 
-impl<R> From<SdkError<StartLoaderJobError, R>> for LambdaResponse {
-    fn from(error: SdkError<StartLoaderJobError, R>) -> Self {
+impl From<TimeoutError> for LambdaResponse {
+    fn from(error: TimeoutError) -> Self {
+        let msg = format!("Timeout Error: {:?}", error);
+        tracing::error!(msg);
+        Self {
+            status_code: 504,
+            message: msg,
+            ..Default::default()
+        }
+    }
+}
+
+impl From<DispatchFailure> for LambdaResponse {
+    fn from(error: DispatchFailure) -> Self {
+        let cause = error.as_connector_error().unwrap();
+        let msg = format!("Dispatch failure: {cause}");
+        tracing::error!(msg);
+        Self {
+            status_code: 500,
+            message: msg,
+            detailed_message: Some(format!("{}", cause.source().unwrap())),
+            ..Default::default()
+        }
+    }
+}
+
+// impl<R> From<ResponseError<R>> for LambdaResponse {
+//     fn from(error: ResponseError<R>) -> Self {
+//         let msg = format!("Response error");
+//         tracing::error!(msg);
+//         Self {
+//             status_code: 500,
+//             message: msg,
+//             ..Default::default()
+//         }
+//     }
+// }
+
+impl From<ResponseError<Response>> for LambdaResponse {
+    fn from(error: ResponseError<Response>) -> Self {
+        let msg = format!("Response error: {:?}", error);
+        tracing::error!(msg);
+        Self {
+            status_code: 500,
+            message: msg,
+            ..Default::default()
+        }
+    }
+}
+
+impl<E: std::fmt::Debug, R> From<ServiceError<E, R>> for LambdaResponse {
+    fn from(error: ServiceError<E, R>) -> Self {
+        let service_error = error.into_err();
+        tracing::error!("Known service error: {:?}", service_error);
+        Self {
+            status_code: 500,
+            message: format!("Service Error: {:?}", service_error),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<SdkError<StartLoaderJobError, Response>> for LambdaResponse {
+    fn from(error: SdkError<StartLoaderJobError, Response>) -> Self {
         match error {
             SdkError::ServiceError(service_error) => {
-                match service_error.err() {
-                    StartLoaderJobError::BadRequestException(exc) => exc.into(),
-                    source @ _ => source.into(),
+                let service_error = service_error.into_err();
+                match service_error {
+                    StartLoaderJobError::BadRequestException(exc) => return exc.into(),
+                    _ => (),
                 }
+                service_error.into()
             },
             SdkError::TimeoutError(timeout_error) => timeout_error.into(),
-            _ => {
-                tracing::error!("Unknown error starting the RDF load: {:}", error);
-                Self {
-                    status_code: 500,
-                    message: format!("{:}", error),
-                    ..Default::default()
-                }
-            },
+            SdkError::DispatchFailure(dispatch_failure) => dispatch_failure.into(),
+            SdkError::ResponseError(response_error) => response_error.into(),
+            SdkError::ConstructionFailure(construction_failure) => construction_failure.into(),
+            _ => todo!(),
+        }
+    }
+}
+
+impl From<BadRequestException> for LambdaResponse {
+    fn from(error: BadRequestException) -> Self {
+        Self {
+            status_code: 400,
+            message: error
+                .message
+                .clone()
+                .unwrap_or("unknown message".to_string()),
+            detailed_message: Some(error.detailed_message.clone()),
+            detail_error: LambdaDetailError::from_bad_request_exception(&error),
+            ..Default::default()
         }
     }
 }
@@ -130,22 +216,15 @@ impl From<&StartLoaderJobOutput> for LambdaResponse {
     }
 }
 
-impl<R> From<SdkError<GetLoaderJobStatusError, R>> for LambdaResponse {
-    fn from(error: SdkError<GetLoaderJobStatusError, R>) -> Self {
+impl From<SdkError<GetLoaderJobStatusError, Response>> for LambdaResponse {
+    fn from(error: SdkError<GetLoaderJobStatusError, Response>) -> Self {
         match error {
-            SdkError::ServiceError(service_error) => service_error.err().into(),
+            SdkError::ServiceError(service_error) => service_error.into(),
             SdkError::TimeoutError(timeout_error) => timeout_error.into(),
-            _ => {
-                tracing::error!(
-                    "Unknown error checking the status of a loader job: {:}",
-                    error
-                );
-                Self {
-                    status_code: 500,
-                    message: format!("{:}", error),
-                    ..Default::default()
-                }
-            },
+            SdkError::DispatchFailure(dispatch_failure) => dispatch_failure.into(),
+            SdkError::ResponseError(response_error) => response_error.into(),
+            SdkError::ConstructionFailure(construction_failure) => construction_failure.into(),
+            _ => todo!(),
         }
     }
 }
@@ -162,6 +241,27 @@ impl From<&GetLoaderJobStatusError> for LambdaResponse {
                 Self {
                     status_code: 500,
                     message: format!("{:}", source),
+                    ..Default::default()
+                }
+            },
+        }
+    }
+}
+
+impl From<StartLoaderJobError> for LambdaResponse {
+    fn from(error: StartLoaderJobError) -> Self {
+        match error {
+            StartLoaderJobError::BadRequestException(exc) => exc.into(),
+            ref source @ _ => {
+                let meta = error.meta();
+                let msg = format!(
+                    "Unknown error starting a loader job: {} {:?}",
+                    source, meta
+                );
+                tracing::error!(msg);
+                Self {
+                    status_code: 500,
+                    message: msg,
                     ..Default::default()
                 }
             },
