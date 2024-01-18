@@ -1,7 +1,9 @@
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
-
-use {ekg_aws_util::lambda::LambdaResponse, serde_json::Value};
+use {
+    ekg_aws_util::lambda::{LambdaDetailStatus, LambdaResponse},
+    serde_json::Value,
+};
 
 mod request;
 
@@ -76,8 +78,8 @@ async fn handle_lambda_payload(
 
 /// The actual handler of the Lambda payload.
 ///
-/// - `request`: The output of the ekg_lfn_load Lambda function is
-///   the input to this one.
+/// - `request`: The output of the ekg_lfn_load Lambda function is the input to
+///   this one.
 async fn handle_lambda_request(
     request: &LambdaResponse,
     aws_neptunedata_client: aws_sdk_neptunedata::Client,
@@ -97,18 +99,138 @@ async fn handle_lambda_request(
     let result = aws_neptunedata_client
         .get_loader_job_status()
         .load_id(load_id)
+        .errors(true)
         .send()
         .await;
 
     match result {
-        Ok(loader_job_status) => Ok(LambdaResponse::ok(
-            format!(
-                "Loader job status is {}",
-                loader_job_status.status()
-            )
-            .as_str(),
-            Some(format!("{:?}", loader_job_status.payload()).as_str()),
-        )),
+        Ok(loader_job_status) => {
+            let overall_status = &loader_job_status
+                .payload()
+                .as_object()
+                .unwrap()
+                .get("overallStatus");
+            if overall_status.is_none() {
+                return Ok(LambdaResponse::ok(
+                    "Missing overallStatus in loader job status",
+                    None,
+                    Some(LambdaDetailStatus::LoaderJobStatusUnknown),
+                ));
+            }
+            let status = overall_status.unwrap().as_object().unwrap()["status"]
+                .as_string()
+                .unwrap();
+            let (msg, detail_status) = match status {
+                "LOAD_IN_QUEUE" => {
+                    (
+                        "Loader job is still in the queue",
+                        LambdaDetailStatus::LoaderJobInQueue,
+                    )
+                },
+                "LOAD_NOT_STARTED" => {
+                    (
+                        "Loader job has not started yet",
+                        LambdaDetailStatus::LoaderJobNotStarted,
+                    )
+                },
+                "LOAD_IN_PROGRESS" => {
+                    (
+                        "Loader job is still in progress",
+                        LambdaDetailStatus::LoaderJobInProgress,
+                    )
+                },
+                "LOAD_COMPLETED" => {
+                    (
+                        "Loader job completed",
+                        LambdaDetailStatus::LoaderJobCompleted,
+                    )
+                },
+                "LOAD_CANCELLED_BY_USER" => {
+                    (
+                        "Loader job cancelled by user",
+                        LambdaDetailStatus::LoaderJobCancelledByUser,
+                    )
+                },
+                "LOAD_CANCELLED_DUE_TO_ERRORS" => {
+                    (
+                        "Loader job cancelled due to errors",
+                        LambdaDetailStatus::LoaderJobCancelledDueToErrors,
+                    )
+                },
+                "LOAD_UNEXPECTED_ERROR" => {
+                    (
+                        "Loader job failed due to unexpected error",
+                        LambdaDetailStatus::LoaderJobUnexpectedError,
+                    )
+                },
+                "LOAD_FAILED" => {
+                    (
+                        "Loader job failed",
+                        LambdaDetailStatus::LoaderJobFailed,
+                    )
+                },
+                "LOAD_S3_READ_ERROR" => {
+                    (
+                        "Loader job failed due to S3 read error",
+                        LambdaDetailStatus::LoaderJobS3ReadError,
+                    )
+                },
+                "LOAD_S3_ACCESS_DENIED_ERROR" => {
+                    (
+                        "Loader job failed due to S3 access denied error",
+                        LambdaDetailStatus::LoaderJobS3AccessDeniedError,
+                    )
+                },
+                "LOAD_COMMITTED_W_WRITE_CONFLICTS" => {
+                    (
+                        "Loader job failed due to write conflicts",
+                        LambdaDetailStatus::LoaderJobCommittedWithWriteConflicts,
+                    )
+                },
+                "LOAD_DATA_DEADLOCK" => {
+                    (
+                        "Loader job failed due to data deadlock",
+                        LambdaDetailStatus::LoaderJobDataDeadlock,
+                    )
+                },
+                "LOAD_DATA_FAILED_DUE_TO_FEED_MODIFIED_OR_DELETED" => {
+                    (
+                        "Loader job failed because file was deleted or updated after load start.",
+                        LambdaDetailStatus::LoaderJobDataFailedDueToFeedModifiedOrDeleted,
+                    )
+                },
+                "LOAD_FAILED_BECAUSE_DEPENDENCY_NOT_SATISFIED" => {
+                    (
+                        "Loader job failed because dependency was not satisfied.",
+                        LambdaDetailStatus::LoaderJobFailedBecauseDependencyNotSatisfied,
+                    )
+                },
+                "LOAD_FAILED_INVALID_REQUEST" => {
+                    (
+                        "Loader job failed due to invalid request",
+                        LambdaDetailStatus::LoaderJobFailedInvalidRequest,
+                    )
+                },
+                _ => {
+                    (
+                        "Loader job status unknown",
+                        LambdaDetailStatus::LoaderJobStatusUnknown,
+                    )
+                },
+            };
+            Ok(LambdaResponse::ok(
+                msg,
+                Some(
+                    format!(
+                        "Loader job status is {} with payload {:?}",
+                        loader_job_status.status(),
+                        loader_job_status.payload()
+                    )
+                    .as_str(),
+                ),
+                Some(detail_status),
+            ))
+        },
         Err(error) => Ok(error.into()),
     }
 }

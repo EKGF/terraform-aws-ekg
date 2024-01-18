@@ -1,19 +1,22 @@
-use {ekg_error::Error, ekg_util::env::mandatory_env_var};
+use {
+    ekg_error::Error,
+    ekg_util::{env::mandatory_env_var_base_iri, iri::BaseIRI},
+};
 
 pub struct EkgIdentifierContext {
-    pub ekg_base:          String,
-    pub ekg_id_base:       String,
-    pub ekg_graph_base:    String,
-    pub ekg_ontology_base: String,
+    pub ekg_base:          BaseIRI,
+    pub ekg_id_base:       BaseIRI,
+    pub ekg_graph_base:    BaseIRI,
+    pub ekg_ontology_base: BaseIRI,
 }
 
 impl EkgIdentifierContext {
     pub fn from_env(suffix: &'static str) -> Result<Self, Error> {
         Ok(Self {
-            ekg_base:          mandatory_env_var("EKG_BASE", Some(suffix))?,
-            ekg_id_base:       mandatory_env_var("EKG_ID_BASE", Some(suffix))?,
-            ekg_graph_base:    mandatory_env_var("EKG_GRAPH_BASE", Some(suffix))?,
-            ekg_ontology_base: mandatory_env_var("EKG_ONTOLOGY_BASE", Some(suffix))?,
+            ekg_base:          mandatory_env_var_base_iri("EKG_BASE", Some(suffix))?,
+            ekg_id_base:       mandatory_env_var_base_iri("EKG_ID_BASE", Some(suffix))?,
+            ekg_graph_base:    mandatory_env_var_base_iri("EKG_GRAPH_BASE", Some(suffix))?,
+            ekg_ontology_base: mandatory_env_var_base_iri("EKG_ONTOLOGY_BASE", Some(suffix))?,
         })
     }
 }

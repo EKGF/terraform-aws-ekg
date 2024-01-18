@@ -111,8 +111,12 @@ async fn handle_load_request_registration(
     // TODO: the string "load-requests" should be based on the name of the terraform
     // module
     let graph_load_requests = format!(
-        "{}/{}",
-        ekg_identifier_contexts.internal.ekg_graph_base, "load-requests"
+        "{}{}",
+        ekg_identifier_contexts
+            .internal
+            .ekg_graph_base
+            .as_base_iri(),
+        "load-requests"
     );
 
     tracing::info!(
@@ -131,7 +135,7 @@ async fn handle_load_request_registration(
             }}
         "#,
         graph_load_requests = graph_load_requests.as_str(),
-        load_request_iri = format!("{}/{}", ekg_identifier_contexts.internal.ekg_id_base.as_str(), load_request_id),
+        load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
         s3_file = load_request.source,
     };
     let statement = ekg_sparql::Statement::new(
@@ -147,6 +151,7 @@ async fn handle_load_request_registration(
 
     Ok(LambdaResponse::ok(
         "Load request registered successfully",
+        None,
         None,
     ))
 }
@@ -169,21 +174,19 @@ async fn handle_load_request(
         .iam_role_arn(&load_request.iam_role_arn)
         .mode(load_request.mode.clone().into())
         .s3_bucket_region(load_request.region.as_str().into())
-        .fail_on_error(load_request.fail_on_error.as_str() == "TRUE")
+        .fail_on_error(load_request.fail_on_error)
         .parallelism(load_request.parallelism.as_str().into())
         .set_parser_configuration(Some(
             load_request.parser_configuration.as_hash_map(),
         ))
-        .update_single_cardinality_properties(
-            load_request.update_single_cardinality_properties.as_str() == "TRUE",
-        )
+        .update_single_cardinality_properties(load_request.update_single_cardinality_properties)
         .queue_request(load_request.queue_request)
         .set_dependencies(Some(load_request.dependencies.clone()))
         .send()
         .await;
 
     match result {
-        Ok(ref loader_job) => Ok(loader_job.into()),
+        Ok(ref loader_job_output) => Ok(LambdaResponse::from(loader_job_output)),
         Err(error) => Ok(error.into()),
     }
 }

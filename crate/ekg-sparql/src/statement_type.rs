@@ -16,12 +16,22 @@ pub enum SPARQLStatementType {
 impl SPARQLStatementType {
     pub fn from_iri(iri: Option<IRIref>, flavor: SPARQLFlavor) -> Option<Self> {
         match iri {
-            Some(iri) if iri == *ekg_namespace::IRI_SELECT => Some(Self::SELECT(flavor)),
-            Some(iri) if iri == *ekg_namespace::IRI_ASK => Some(Self::ASK(flavor)),
-            Some(iri) if iri == *ekg_namespace::IRI_CONSTRUCT => Some(Self::CONSTRUCT(flavor)),
-            Some(iri) if iri == *ekg_namespace::IRI_DESCRIBE => Some(Self::DESCRIBE(flavor)),
-            Some(iri) if iri == *ekg_namespace::IRI_UPDATE => Some(Self::UPDATE(flavor)),
-            Some(iri) if iri == *ekg_namespace::IRI_DELETE => Some(Self::DELETE(flavor)),
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_SELECT.as_str() => {
+                Some(Self::SELECT(flavor))
+            },
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_ASK.as_str() => Some(Self::ASK(flavor)),
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_CONSTRUCT.as_str() => {
+                Some(Self::CONSTRUCT(flavor))
+            },
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_DESCRIBE.as_str() => {
+                Some(Self::DESCRIBE(flavor))
+            },
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_UPDATE.as_str() => {
+                Some(Self::UPDATE(flavor))
+            },
+            Some(iri) if iri.as_str() == ekg_namespace::IRI_DELETE.as_str() => {
+                Some(Self::DELETE(flavor))
+            },
             Some(iri) => {
                 tracing::trace!("Unknown SPARQL Statement Type: {iri}");
                 None

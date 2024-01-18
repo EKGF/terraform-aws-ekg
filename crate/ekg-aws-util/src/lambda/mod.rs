@@ -1,4 +1,4 @@
-pub use {error::LambdaDetailError, response::LambdaResponse};
+pub use {response::LambdaResponse, status::LambdaDetailStatus};
 
-mod error;
 mod response;
+mod status;

@@ -1,6 +1,5 @@
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
-
 pub use request::Request;
 use {
     crate::{sfn_input::StepFunctionInput, sfn_state_machine::StateMachine},
@@ -22,7 +21,7 @@ mod tests;
 #[derive(Serialize)]
 struct Response {
     req_id: String,
-    msg: String,
+    msg:    String,
 }
 
 #[tokio::main]

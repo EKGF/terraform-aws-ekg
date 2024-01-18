@@ -4,12 +4,28 @@ use {
 };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub enum LambdaDetailError {
+pub enum LambdaDetailStatus {
     MaxLoadTaskQueueSizeLimitBreached,
     MaxConcurrentLoadLimitBreached,
+    LoaderJobInQueue,
+    LoaderJobNotStarted,
+    LoaderJobInProgress,
+    LoaderJobCompleted,
+    LoaderJobCancelledByUser,
+    LoaderJobCancelledDueToErrors,
+    LoaderJobUnexpectedError,
+    LoaderJobFailed,
+    LoaderJobS3ReadError,
+    LoaderJobS3AccessDeniedError,
+    LoaderJobCommittedWithWriteConflicts,
+    LoaderJobDataDeadlock,
+    LoaderJobDataFailedDueToFeedModifiedOrDeleted,
+    LoaderJobFailedBecauseDependencyNotSatisfied,
+    LoaderJobFailedInvalidRequest,
+    LoaderJobStatusUnknown,
 }
 
-impl LambdaDetailError {
+impl LambdaDetailStatus {
     pub fn from_bad_request_exception(exc: &BadRequestException) -> Option<Self> {
         if exc.code.as_str() != "400" {
             if let Some(message) = exc.message.as_deref() {

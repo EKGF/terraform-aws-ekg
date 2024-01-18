@@ -10,7 +10,7 @@
       "baseUri": "https://placeholder.kg/id",
       "namedGraphUri": "s3://ekgf-dt-dev-metadata/ontology/cdmc-data-use.ttl"
     },
-    "queueRequest": true,
+    "queueRequest": "TRUE",
     "region": "antartica-01",
     "source": "s3://ekgf-dt-dev-metadata/ontology/cdmc-data-use.ttl",
     "updateSingleCardinalityProperties": "FALSE"

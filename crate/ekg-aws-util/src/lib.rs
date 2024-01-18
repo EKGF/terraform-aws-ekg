@@ -1,3 +1,5 @@
+#![deny(unused_crate_dependencies)]
+
 use serde::Deserialize;
 pub use {
     s3::{S3Bucket, S3EventRecord, S3EventRecords, S3Object},
@@ -12,6 +14,7 @@ pub mod sns;
 pub mod tls_connector;
 
 mod http;
+pub mod serde_util;
 #[cfg(test)]
 mod tests;
 

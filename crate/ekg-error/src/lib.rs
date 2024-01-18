@@ -1,3 +1,5 @@
+#![deny(unused_crate_dependencies)]
+
 use thiserror::Error;
 
 #[allow(missing_docs)]
@@ -33,6 +35,10 @@ pub enum Error {
     #[allow(dead_code)]
     #[error("Mandatory Environment Variable {0} missing")]
     MandatoryEnvironmentVariableMissing(String),
+
+    #[allow(dead_code)]
+    #[error("Mandatory Environment Variable {0} is not a valid IRI")]
+    MandatoryEnvironmentVariableIsNotIRI(String),
 
     #[allow(dead_code)]
     #[error("Service error {0}")]

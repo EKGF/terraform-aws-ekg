@@ -1,5 +1,5 @@
 use {
-    crate::lambda::LambdaDetailError,
+    crate::lambda::LambdaDetailStatus,
     aws_sdk_neptunedata::{
         error::SdkError,
         operation::{
@@ -20,7 +20,7 @@ use {
     },
     rand::Rng,
     serde::{Deserialize, Serialize},
-    std::error::Error,
+    std::{convert::From, error::Error},
 };
 
 /// Generic response type that suits most of our lambda functions
@@ -32,7 +32,7 @@ pub struct LambdaResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detailed_message:        Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail_error:            Option<LambdaDetailError>,
+    pub detail_status:           Option<LambdaDetailStatus>,
     /// A generic slot that can be used to pass back a result identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result_identifier:       Option<String>,
@@ -58,12 +58,17 @@ impl LambdaResponse {
             Some(rng.gen_range(MIN_RETRY_WAIT_SECONDS..MAX_RETRY_WAIT_SECONDS))
     }
 
-    pub fn ok(message: &str, detailed_message: Option<&str>) -> Self {
+    pub fn ok(
+        message: &str,
+        detailed_message: Option<&str>,
+        detail_status: Option<LambdaDetailStatus>,
+    ) -> Self {
         tracing::info!(message);
         Self {
             status_code: 200,
             message: message.to_string(),
             detailed_message: detailed_message.map(|s| s.to_string()),
+            detail_status,
             ..Default::default()
         }
     }
@@ -78,7 +83,7 @@ impl From<&BadRequestException> for LambdaResponse {
                 .clone()
                 .unwrap_or("unknown message".to_string()),
             detailed_message: Some(error.detailed_message.clone()),
-            detail_error: LambdaDetailError::from_bad_request_exception(error),
+            detail_status: LambdaDetailStatus::from_bad_request_exception(error),
             ..Default::default()
         }
     }
@@ -198,7 +203,7 @@ impl From<BadRequestException> for LambdaResponse {
                 .clone()
                 .unwrap_or("unknown message".to_string()),
             detailed_message: Some(error.detailed_message.clone()),
-            detail_error: LambdaDetailError::from_bad_request_exception(&error),
+            detail_status: LambdaDetailStatus::from_bad_request_exception(&error),
             ..Default::default()
         }
     }

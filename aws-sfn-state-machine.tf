@@ -25,20 +25,20 @@ resource "aws_sfn_state_machine" "rdf_load" {
                   {
                       "Variable": "$.LoadOutput.statusCode",
                       "NumericEquals": 200,
-                      "Next": "CheckIfLoaderFinished"
+                      "Next": "CheckLoaderJobStatus"
                   },
                   {
-                      "Variable": "$.LoadOutput.detailError",
+                      "Variable": "$.LoadOutput.detailStatus",
                       "StringEquals": "Timeout",
                       "Next": "RetryLoadInstruction"
                   },
                   {
-                      "Variable": "$.LoadOutput.detailError",
+                      "Variable": "$.LoadOutput.detailStatus",
                       "StringEquals": "MaxLoadTaskQueueSizeLimitBreached",
                       "Next": "RetryLoadInstruction"
                   },
                   {
-                      "Variable": "$.LoadOutput.detailError",
+                      "Variable": "$.LoadOutput.detailStatus",
                       "StringEquals": "MaxConcurrentLoadLimitBreached",
                       "Next": "RetryLoadInstruction"
                   }
@@ -51,19 +51,55 @@ resource "aws_sfn_state_machine" "rdf_load" {
               "SecondsPath": "$.LoadOutput.suggestedRetrySeconds",
               "Next": "InstructNeptuneToLoad"
           },
-          "CheckIfLoaderFinished": {
+          "CheckLoaderJobStatus": {
               "Type": "Task",
               "Comment": "Check if the Neptune bulk loader has finished loading the given S3 file",
               "Resource": "${aws_lambda_function.check.arn}",
               "InputPath": "$",
               "TimeoutSeconds": 5,
               "ResultPath": "$.CheckOutput",
-              "Next": "CheckIfLoaderFinishedSucceeded"
+              "Next": "CheckIfLoaderJobFinished"
           },
-          "CheckIfLoaderFinishedSucceeded": {
+          "CheckIfLoaderJobFinished": {
+              "Type": "Choice",
+              "Comment": "Check if the Neptune bulk loader has finished the job successfully, failed or is still running",
+              "Choices": [
+                  {
+                      "Variable": "$.CheckOutput.detailStatus",
+                      "StringEquals": "LoaderJobCompleted",
+                      "Next": "LoaderJobCompleted"
+                  },
+                  {
+                      "Variable": "$.CheckOutput.detailStatus",
+                      "StringEquals": "LoaderJobInQueue",
+                      "Next": "RetryCheck"
+                  },
+                  {
+                      "Variable": "$.CheckOutput.detailStatus",
+                      "StringEquals": "LoaderJobNotStarted",
+                      "Next": "RetryCheck"
+                  },
+                  {
+                      "Variable": "$.CheckOutput.detailStatus",
+                      "StringEquals": "LoaderJobInProgress",
+                      "Next": "RetryCheck"
+                  }
+              ],
+              "Default": "LoaderJobFailed"
+          },
+          "RetryCheck": {
+              "Type": "Wait",
+              "Comment": "Wait a random number of seconds, as suggested by the check lambda function, and then retry to get the latest status of the Neptune bulk loader",
+              "SecondsPath": "$.CheckOutput.suggestedRetrySeconds",
+              "Next": "CheckLoaderJobStatus"
+          },
+          "LoaderJobCompleted": {
               "Type": "Succeed"
           },
           "LoadInstructionFailed": {
+              "Type": "Fail"
+          },
+          "LoaderJobFailed": {
               "Type": "Fail"
           }
       }

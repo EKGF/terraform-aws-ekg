@@ -23,8 +23,8 @@ impl SPARQLClient {
         let update_endpoint = mandatory_env_var("EKG_SPARQL_UPDATE_ENDPOINT", None)?;
 
         Self::new(
-            Uri::parse(query_endpoint.as_str()),
-            Some(Uri::parse(update_endpoint.as_str()),
+            &Uri::parse(query_endpoint.as_str())?,
+            Some(&Uri::parse(update_endpoint.as_str())?),
         )
         .await
     }
@@ -72,6 +72,7 @@ impl SPARQLClient {
         } else {
             &self.update_endpoint
         };
+        let hyper_uri = hyper::Uri::try_from(uri.borrow().as_str())?;
         let accept_header = parsed_statement
             .statement_type
             .default_statement_response_mime_type();
@@ -79,7 +80,7 @@ impl SPARQLClient {
         tracing::info!("SPARQL endpoint: {:}", uri);
         let request = hyper::http::request::Builder::new()
             .method(hyper::http::method::Method::POST)
-            .uri(uri.clone())
+            .uri(hyper_uri)
             .header(
                 hyper::http::header::CONTENT_TYPE,
                 "application/x-www-form-urlencoded",

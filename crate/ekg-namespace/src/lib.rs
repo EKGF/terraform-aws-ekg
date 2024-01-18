@@ -1,3 +1,5 @@
+#![deny(unused_crate_dependencies)]
+
 pub use {
     class::Class,
     consts::*,
@@ -20,4 +22,3 @@ mod term;
 
 pub type StaticIRI = fluent_uri::Uri<&'static str>;
 pub type IRIref<'a> = &'a fluent_uri::Uri<&'a str>;
-pub type OwnedIRI = fluent_uri::Uri<String>;

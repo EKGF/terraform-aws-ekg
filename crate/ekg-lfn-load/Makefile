@@ -1,14 +1,15 @@
 ifndef GIT_ROOT
 GIT_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 endif
-
+ifndef MK_DIR
 MK_DIR := $(GIT_ROOT)/.make
+endif
 
 -include $(GIT_ROOT)/ekgf-make.mk
 
 .PHONY: build
 build: cargo-check cargo-lambda-check
-	$(CARGO_BIN) lambda build
+	$(CARGO_BIN) +$(RUSTUP_TOOLCHAIN) lambda build --arm64 --release
 
 .PHONY: test
 test: cargo-check
@@ -33,8 +34,10 @@ watch: cargo-check cargo-lambda-check
 	EKG_SPARQL_UPDATE_ENDPOINT=https://ekgf-dt-dev-staging.cluster-ckvyb9qgnfdp.eu-west-2.neptune.amazonaws.com:8182/sparql \
 	neptune_s3_bucket_region=eu-west-2 \
 	neptune_s3_iam_role_arn=arn:aws:iam::457852604093:role/ekgf-dt/dev/staging/ekgf-dt-dev-staging-neptune \
+	RUST_LOG=info \
 	$(CARGO_BIN) lambda watch --wait -vv
 
 .PHONY: invoke
 invoke: cargo-check cargo-lambda-check event.json
+	RUST_LOG=info \
 	$(CARGO_BIN) lambda invoke --data-file event.json -vv

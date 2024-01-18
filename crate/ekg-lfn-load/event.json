@@ -8,9 +8,10 @@
     "parallelism": "MEDIUM",
     "parserConfiguration": {
       "baseUri": "https://placeholder.kg/id",
-      "namedGraphUri": "s3://ekgf-dt-dev-metadata/use-case/studio/stories/get-use-cases/tests.ttl"
+      "namedGraphUri": "s3://ekgf-dt-dev-metadata/use-case/studio/stories/get-use-cases/tests.ttl",
+      "allowEmptyStrings": "FALSE"
     },
-    "queueRequest": true,
+    "queueRequest": "TRUE",
     "region": "eu-west-2",
     "source": "s3://ekgf-dt-dev-metadata/use-case/studio/stories/get-use-cases/tests.ttl",
     "updateSingleCardinalityProperties": "FALSE"

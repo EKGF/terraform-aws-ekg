@@ -8,9 +8,13 @@ pub struct PrefixesBuilder {
 impl<'a> PrefixesBuilder {
     pub fn default_builder() -> Self { PrefixesBuilder { prefixes: Vec::new() } }
 
-    pub fn declare_with_name_and_iri(mut self, name: &str, iri: &fluent_uri::Uri<&str>) -> Self {
-        self.prefixes.push(Namespace::declare(name, iri));
-        self
+    pub fn declare_with_name_and_iri(
+        mut self,
+        name: &str,
+        iri: &fluent_uri::Uri<&str>,
+    ) -> Result<Self, ekg_error::Error> {
+        self.prefixes.push(Namespace::declare(name, iri)?);
+        Ok(self)
     }
 
     pub fn declare(mut self, namespace: &Namespace) -> Self {
