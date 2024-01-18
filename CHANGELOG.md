@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.10](https://github.com/EKGF/terraform-neptune/compare/0.0.9..0.0.10) - 2024-01-18
+#### Features
+- **(lambda)** less noisy error messages - ([ebfd419](https://github.com/EKGF/terraform-neptune/commit/ebfd419d3b57acc1a46795951aa05005c39696bc)) - [@jgeluk](https://github.com/jgeluk)
+- **(lfn-load)** added a "suggested wait time" to the output of the load lambda function for the state machine to pick up as the wait time before retrying - ([1174a49](https://github.com/EKGF/terraform-neptune/commit/1174a4998b23f50468f1552375620a1503a3bad9)) - [@jgeluk](https://github.com/jgeluk)
+#### Miscellaneous Chores
+- intermediate commit - ([bb39760](https://github.com/EKGF/terraform-neptune/commit/bb39760ba7eccc8bd15ea82ee89dbc2046b044ce)) - [@jgeluk](https://github.com/jgeluk)
+#### Refactoring
+- **(general)** big refactor - ([c7afa51](https://github.com/EKGF/terraform-neptune/commit/c7afa51ad37c8f543ceee70317f49f39c9aae831)) - [@jgeluk](https://github.com/jgeluk)
+- **(namespace)** removed dash from prefix name due to limitation in visual studio code - ([5f2dcd0](https://github.com/EKGF/terraform-neptune/commit/5f2dcd042439951b6f095bf5af25c56684f17f68)) - [@jgeluk](https://github.com/jgeluk)
+- many small unrelated changes - ([248bd47](https://github.com/EKGF/terraform-neptune/commit/248bd4736d026d91d8dd8cd21321d2942819042e)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.9](https://github.com/EKGF/terraform-neptune/compare/0.0.8..0.0.9) - 2024-01-10
 #### Features
 - **(sparql)** donated agnos.ai code to EKGF (crates ekg-sparql and ekg-namespace). ekg-lfn-load crate now updates Neptune using SPARQL with load request information. - ([6a5f588](https://github.com/EKGF/terraform-neptune/commit/6a5f5889186a508704325d738eba61bc809a3bc0)) - [@jgeluk](https://github.com/jgeluk)
