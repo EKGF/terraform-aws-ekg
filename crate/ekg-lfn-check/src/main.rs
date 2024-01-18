@@ -120,114 +120,132 @@ async fn handle_lambda_request(
             let status = overall_status.unwrap().as_object().unwrap()["status"]
                 .as_string()
                 .unwrap();
-            let (msg, detail_status) = match status {
+            let (msg, detail_status, show_detail) = match status {
                 "LOAD_IN_QUEUE" => {
                     (
                         "Loader job is still in the queue",
                         LambdaDetailStatus::LoaderJobInQueue,
+                        false,
                     )
                 },
                 "LOAD_NOT_STARTED" => {
                     (
                         "Loader job has not started yet",
                         LambdaDetailStatus::LoaderJobNotStarted,
+                        false,
                     )
                 },
                 "LOAD_IN_PROGRESS" => {
                     (
                         "Loader job is still in progress",
                         LambdaDetailStatus::LoaderJobInProgress,
+                        false,
                     )
                 },
                 "LOAD_COMPLETED" => {
                     (
                         "Loader job completed",
                         LambdaDetailStatus::LoaderJobCompleted,
+                        true,
                     )
                 },
                 "LOAD_CANCELLED_BY_USER" => {
                     (
                         "Loader job cancelled by user",
                         LambdaDetailStatus::LoaderJobCancelledByUser,
+                        true,
                     )
                 },
                 "LOAD_CANCELLED_DUE_TO_ERRORS" => {
                     (
                         "Loader job cancelled due to errors",
                         LambdaDetailStatus::LoaderJobCancelledDueToErrors,
+                        true,
                     )
                 },
                 "LOAD_UNEXPECTED_ERROR" => {
                     (
                         "Loader job failed due to unexpected error",
                         LambdaDetailStatus::LoaderJobUnexpectedError,
+                        true,
                     )
                 },
                 "LOAD_FAILED" => {
                     (
                         "Loader job failed",
                         LambdaDetailStatus::LoaderJobFailed,
+                        true,
                     )
                 },
                 "LOAD_S3_READ_ERROR" => {
                     (
                         "Loader job failed due to S3 read error",
                         LambdaDetailStatus::LoaderJobS3ReadError,
+                        true,
                     )
                 },
                 "LOAD_S3_ACCESS_DENIED_ERROR" => {
                     (
                         "Loader job failed due to S3 access denied error",
                         LambdaDetailStatus::LoaderJobS3AccessDeniedError,
+                        true,
                     )
                 },
                 "LOAD_COMMITTED_W_WRITE_CONFLICTS" => {
                     (
                         "Loader job failed due to write conflicts",
                         LambdaDetailStatus::LoaderJobCommittedWithWriteConflicts,
+                        true,
                     )
                 },
                 "LOAD_DATA_DEADLOCK" => {
                     (
                         "Loader job failed due to data deadlock",
                         LambdaDetailStatus::LoaderJobDataDeadlock,
+                        true,
                     )
                 },
                 "LOAD_DATA_FAILED_DUE_TO_FEED_MODIFIED_OR_DELETED" => {
                     (
                         "Loader job failed because file was deleted or updated after load start.",
                         LambdaDetailStatus::LoaderJobDataFailedDueToFeedModifiedOrDeleted,
+                        true,
                     )
                 },
                 "LOAD_FAILED_BECAUSE_DEPENDENCY_NOT_SATISFIED" => {
                     (
                         "Loader job failed because dependency was not satisfied.",
                         LambdaDetailStatus::LoaderJobFailedBecauseDependencyNotSatisfied,
+                        true,
                     )
                 },
                 "LOAD_FAILED_INVALID_REQUEST" => {
                     (
                         "Loader job failed due to invalid request",
                         LambdaDetailStatus::LoaderJobFailedInvalidRequest,
+                        true,
                     )
                 },
                 _ => {
                     (
                         "Loader job status unknown",
                         LambdaDetailStatus::LoaderJobStatusUnknown,
+                        true,
                     )
                 },
             };
+            let detailed_message = if show_detail {
+                Some(format!(
+                    "Loader job status is {} with payload {:?}",
+                    loader_job_status.status(),
+                    loader_job_status.payload()
+                ))
+            } else {
+                None
+            };
             Ok(LambdaResponse::ok(
                 msg,
-                Some(
-                    format!(
-                        "Loader job status is {} with payload {:?}",
-                        loader_job_status.status(),
-                        loader_job_status.payload()
-                    )
-                    .as_str(),
-                ),
+                detailed_message.as_deref(),
                 Some(detail_status),
             ))
         },
