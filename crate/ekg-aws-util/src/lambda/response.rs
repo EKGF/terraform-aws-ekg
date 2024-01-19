@@ -44,6 +44,7 @@ const MIN_RETRY_WAIT_SECONDS: u16 = 10;
 const MAX_RETRY_WAIT_SECONDS: u16 = 60;
 
 impl LambdaResponse {
+    /// deprecated
     pub fn clean(&mut self) {
         // Remove the detailed message if it is the same as the message
         if Some(self.message.as_str()) == self.detailed_message.as_deref() {
@@ -56,6 +57,26 @@ impl LambdaResponse {
         let mut rng = rand::thread_rng();
         self.suggested_retry_seconds =
             Some(rng.gen_range(MIN_RETRY_WAIT_SECONDS..MAX_RETRY_WAIT_SECONDS))
+    }
+
+    pub fn retryable(self) -> Self {
+        Self {
+            // Remove the detailed message if it is the same as the message
+            detailed_message: if Some(self.message.as_str()) == self.detailed_message.as_deref() {
+                None
+            } else {
+                self.detailed_message
+            },
+            suggested_retry_seconds: {
+                // Suggest a random number of seconds to wait before retrying the request
+                // in case of a recognized error. Since the Neptune loader queue has 64 slots
+                // we don't want all hundreds of other requests to wait the same amount of time
+                // before trying again adding their requests to that limited queue.
+                let mut rng = rand::thread_rng();
+                Some(rng.gen_range(MIN_RETRY_WAIT_SECONDS..MAX_RETRY_WAIT_SECONDS))
+            },
+            ..self
+        }
     }
 
     pub fn ok(
@@ -71,6 +92,7 @@ impl LambdaResponse {
             detail_status,
             ..Default::default()
         }
+        .retryable()
     }
 }
 
@@ -119,8 +141,10 @@ impl From<TimeoutError> for LambdaResponse {
         Self {
             status_code: 504,
             message: msg,
+            detail_status: Some(LambdaDetailStatus::Timedout),
             ..Default::default()
         }
+        .retryable()
     }
 }
 
