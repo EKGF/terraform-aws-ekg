@@ -1,6 +1,10 @@
-# Terraform AWS Neptune RDF Load
+# Terraform module AWS EKG
 
-Load RDF files (.nt or .ttl files only for now) from a given S3 bucket into AWS Neptune.
+This Terraform module is a core part of running an Enterprise Knowledge Graph (EKG) architecture on AWS.
+
+## RDF Load
+
+Loads RDF files (.nt or .ttl files only for now) from a given S3 bucket into AWS Neptune.
 
 This Terraform module uses an AWS Step Function to orchestrate the loading of a given RDF file into Neptune.
 Any RDF file (.nt or .ttl) that is uploaded to the given S3 bucket will be trigger an SNS event picked up
@@ -20,3 +24,4 @@ the [check](./crate/ekg-lfn-check/README.md) lambda function.
 - [ ] Reduce the amount of logging down to the essentials
 - [ ] Support Excel files, run them through a lambda function that converts them to "Raw RDF" files
 - [ ] Support CSV files, run them through a lambda function that converts them to "Raw RDF" files
+- [ ] Support "the Story Service", executing stories as defined per Use Case
