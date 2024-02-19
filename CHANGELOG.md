@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.11](https://github.com/EKGF/terraform-neptune/compare/0.0.10..0.0.11) - 2024-02-19
+#### Bug Fixes
+- increased operation timeout per AWS call from 5 to 60 seconds - ([bbcdf21](https://github.com/EKGF/terraform-neptune/commit/bbcdf218061f89d817e003ae68725ebba8527573)) - [@jgeluk](https://github.com/jgeluk)
+#### Documentation
+- updated README.md - ([c7cfec7](https://github.com/EKGF/terraform-neptune/commit/c7cfec7101c978471df511d385293c0866a8a69b)) - [@jgeluk](https://github.com/jgeluk)
+#### Refactoring
+- minor changes - ([cc68acf](https://github.com/EKGF/terraform-neptune/commit/cc68acfb077f703ca5a45f0855112732a9069076)) - [@jgeluk](https://github.com/jgeluk)
+- relying on ekg-rs repo for generic crates - ([715a3f8](https://github.com/EKGF/terraform-neptune/commit/715a3f8f18f3815f79cc259b7dd766f721607e60)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.10](https://github.com/EKGF/terraform-neptune/compare/0.0.9..0.0.10) - 2024-01-18
 #### Features
 - **(lambda)** less noisy error messages - ([ebfd419](https://github.com/EKGF/terraform-neptune/commit/ebfd419d3b57acc1a46795951aa05005c39696bc)) - [@jgeluk](https://github.com/jgeluk)
