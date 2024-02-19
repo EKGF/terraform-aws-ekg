@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.12](https://github.com/EKGF/terraform-neptune/compare/0.0.11..0.0.12) - 2024-02-19
+#### Documentation
+- updated README.md - ([127f94d](https://github.com/EKGF/terraform-neptune/commit/127f94db71ca56607b873e2c661b75f811fe66f4)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.11](https://github.com/EKGF/terraform-neptune/compare/0.0.10..0.0.11) - 2024-02-19
 #### Bug Fixes
 - increased operation timeout per AWS call from 5 to 60 seconds - ([bbcdf21](https://github.com/EKGF/terraform-neptune/commit/bbcdf218061f89d817e003ae68725ebba8527573)) - [@jgeluk](https://github.com/jgeluk)
