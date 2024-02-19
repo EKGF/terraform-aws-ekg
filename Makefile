@@ -23,4 +23,4 @@ build-lambda-check:
 build: build-lambda-invoke build-lambda-load build-lambda-check
 
 .PHONY: install
-install: cargo-install-components terraform-install cog-install
+install: cargo-install-components terraform-install
