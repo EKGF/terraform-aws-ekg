@@ -8,12 +8,12 @@ MK_DIR := $(GIT_ROOT)/.make
 
 .PHONY: build
 build: cargo-check cargo-lambda-check
-	$(CARGO_BIN) lambda build
+	$(CARGO_BIN) +nightly lambda build --arm64 --release
 
 .PHONY: watch
 watch: cargo-check cargo-lambda-check
-	$(CARGO_BIN) lambda watch --wait -vv
+	$(CARGO_BIN) +nightly lambda watch --wait -vv
 
 .PHONY: invoke
 invoke: cargo-check cargo-lambda-check event.json
-	$(CARGO_BIN) lambda invoke --data-file event.json -vv
+	$(CARGO_BIN) +nightly lambda invoke --data-file event.json -vv

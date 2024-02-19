@@ -20,7 +20,7 @@ use {
     },
     rand::Rng,
     serde::{Deserialize, Serialize},
-    std::{convert::From, error::Error},
+    std::error::Error,
 };
 
 /// Generic response type that suits most of our lambda functions

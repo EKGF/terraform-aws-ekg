@@ -1,4 +1,4 @@
-use {aws_sdk_sfn, ekg_error::Error};
+use ekg_error::Error;
 
 pub struct StateMachine {
     aws_sfn_client: aws_sdk_sfn::Client,

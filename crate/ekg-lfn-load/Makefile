@@ -9,11 +9,11 @@ endif
 
 .PHONY: build
 build: cargo-check cargo-lambda-check
-	$(CARGO_BIN) +$(RUSTUP_TOOLCHAIN) lambda build --arm64 --release
+	$(CARGO_BIN) +nightly lambda build --arm64 --release
 
 .PHONY: test
 test: cargo-check
-	RUST_LOG=info $(CARGO_BIN) test
+	RUST_LOG=info $(CARGO_BIN) +nightly test
 
 .PHONY: watch
 watch: cargo-check cargo-lambda-check
@@ -35,9 +35,9 @@ watch: cargo-check cargo-lambda-check
 	neptune_s3_bucket_region=eu-west-2 \
 	neptune_s3_iam_role_arn=arn:aws:iam::457852604093:role/ekgf-dt/dev/staging/ekgf-dt-dev-staging-neptune \
 	RUST_LOG=info \
-	$(CARGO_BIN) lambda watch --wait -vv
+	$(CARGO_BIN) +nightly lambda watch --wait -vv
 
 .PHONY: invoke
 invoke: cargo-check cargo-lambda-check event.json
 	RUST_LOG=info \
-	$(CARGO_BIN) lambda invoke --data-file event.json -vv
+	$(CARGO_BIN) +nightly lambda invoke --data-file event.json -vv
