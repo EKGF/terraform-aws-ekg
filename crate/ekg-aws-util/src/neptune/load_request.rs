@@ -7,10 +7,9 @@ use {
         S3URI,
     },
     ekg_error::Error,
-    ekg_identifier::EkgIdentifierContexts,
+    ekg_identifier::{ABoxNamespaceIRI, EkgIdentifierContexts},
     ekg_util::{
         env::mandatory_env_var,
-        iri::BaseIRI,
         serde_util::{deserialize_bool_as_uppercase, serialize_bool_as_uppercase},
     },
     serde::{Deserialize, Serialize},
@@ -103,7 +102,7 @@ impl Into<aws_sdk_neptunedata::types::Mode> for Mode {
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ParserConfiguration {
-    pub base_uri:            BaseIRI,
+    pub base_uri:            ABoxNamespaceIRI,
     pub named_graph_uri:     String,
     #[serde(serialize_with = "serialize_bool_as_uppercase")]
     #[serde(deserialize_with = "deserialize_bool_as_uppercase")]

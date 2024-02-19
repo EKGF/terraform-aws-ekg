@@ -46,14 +46,17 @@ rust-version = "1.75"
 # Local crates
 #
 ekg-aws-util = { path = "crate/ekg-aws-util" }
-ekg-error = { path = "crate/ekg-error" }
-ekg-identifier = { path = "crate/ekg-identifier" }
 ekg-lfn-check = { path = "crate/ekg-lfn-check" }
 ekg-lfn-invoke = { path = "crate/ekg-lfn-invoke" }
 ekg-lfn-load = { path = "crate/ekg-lfn-load" }
-ekg-namespace = { path = "crate/ekg-namespace" }
-ekg-sparql = { path = "crate/ekg-sparql" }
-ekg-util = { path = "crate/ekg-util" }
+#
+# other ekg crates
+#
+ekg-error = { version = "0.0.16", default-features = false, features = ["iref", "serde", "aws-lambda-runtime", "tracing-subscriber"] }
+ekg-identifier = { version = "0.0.16", default-features = false, features = [] }
+ekg-metadata = { version = "0.0.16", default-features = false, features = ["serde"] }
+ekg-sparql = { version = "0.0.16", default-features = false, features = [] }
+ekg-util = { version = "0.0.16", default-features = false, features = [] }
 #
 # Tracing & Logging
 #
@@ -88,7 +91,7 @@ spargebra = { version = "0.2.8", default-features = true, features = ["rdf-star"
 # Config stuff
 #
 ignore = { version = "0.4.21", default-features = false }
-config = { version = "0.13.4", default-features = false, features = ["toml"] }
+config = { version = "0.14.0", default-features = false, features = ["toml"] }
 #
 # Runtime stuff
 #
@@ -110,12 +113,13 @@ aws-sdk-neptunedata = { version = "1.9.0", default-features = true, features = [
 # Keep the versions of hyper and hyper-rustls in sync with the versions in aws-smithy-runtime
 #
 rustls = { version = "=0.22.2", default-features = false, features = ["logging", "ring", "tls12"] }
-hyper = { version = "=0.14.26", default-features = false, features = ["client", "tcp", "http2", "stream", "runtime", "backports", "deprecated"] }
+hyper = { version = "=0.14.28", default-features = false, features = ["client", "tcp", "http2", "stream", "runtime", "backports", "deprecated"] }
 hyper-rustls = { version = "=0.25", default-features = false, features = ["http2", "tls12", "webpki-roots", "webpki-tokio", "logging"] }
 hyper-util = { version = "0.1.2", default-features = false, features = ["client", "client-legacy", "http2"] }
 webpki-roots = "0.26.0"
 mime = "0.3.17"
 fluent-uri = "0.1.4"
+lambda_http = { version = "0.9.0", default-features = true }
 #
 # Other Stuff
 #

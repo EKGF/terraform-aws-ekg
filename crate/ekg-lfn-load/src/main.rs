@@ -1,4 +1,9 @@
-use {clients::Clients, std::ops::Deref};
+use {
+    clients::Clients,
+    ekg_identifier::{NS_DATAOPS, NS_RDFS},
+    ekg_sparql::Prefixes,
+    std::ops::Deref,
+};
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use {
     ekg_aws_util::{lambda::LambdaResponse, neptune::LoadRequest},
@@ -37,6 +42,7 @@ async fn main() -> Result<(), LambdaError> {
     Ok(())
 }
 
+// noinspection DuplicatedCode
 /// The actual handler of the Lambda request.
 async fn handle_lambda_event(
     event: LambdaEvent<Value>,
@@ -127,6 +133,8 @@ async fn handle_load_request_registration(
 
     let sparql = formatdoc! {
         r#"
+            {prefix_dataops}
+            {prefix_rdfs}
             INSERT DATA {{
                 GRAPH <{graph_load_requests}> {{
                     <{load_request_iri}> a dataops:LoadRequest ;
@@ -134,16 +142,17 @@ async fn handle_load_request_registration(
                 }}
             }}
         "#,
+        prefix_dataops = NS_DATAOPS.as_sparql_prefix(),
+        prefix_rdfs = NS_RDFS.as_sparql_prefix(),
         graph_load_requests = graph_load_requests.as_str(),
         load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
         s3_file = load_request.source,
     };
     let statement = ekg_sparql::Statement::new(
-        &vec![
-            ekg_namespace::PREFIX_RDFS.deref(),
-            ekg_namespace::PREFIX_DATAOPS.deref(),
-        ]
-        .into(),
+        Prefixes::builder()
+            .declare(NS_DATAOPS.deref())
+            .declare(NS_RDFS.deref())
+            .build()?,
         std::borrow::Cow::Borrowed(sparql.as_str()),
     )?;
 

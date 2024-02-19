@@ -22,9 +22,9 @@ tokio.workspace = true
 aws-sdk-neptunedata.workspace = true
 ekg-aws-util.workspace = true
 ekg-identifier.workspace = true
-ekg-util.workspace = true
+ekg-util = { workspace = true, features = ["tracing-subscriber"] }
 ekg-sparql.workspace = true
-ekg-namespace.workspace = true
+ekg-metadata.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

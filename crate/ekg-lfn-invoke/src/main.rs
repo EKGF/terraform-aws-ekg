@@ -38,6 +38,7 @@ async fn main() -> Result<(), LambdaError> {
     Ok(())
 }
 
+// noinspection DuplicatedCode
 /// The actual handler of the Lambda request.
 pub(crate) async fn handle_lambda_event(
     event: LambdaEvent<Value>,
