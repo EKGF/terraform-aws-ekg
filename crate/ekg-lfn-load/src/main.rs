@@ -1,5 +1,6 @@
 use {
     clients::Clients,
+    ekg_aws_util::lambda::LambdaDetailStatus::LoaderJobInQueue,
     ekg_identifier::{NS_DATAOPS, NS_RDFS},
     ekg_sparql::Prefixes,
     std::ops::Deref,
@@ -161,7 +162,7 @@ async fn handle_load_request_registration(
     Ok(LambdaResponse::ok(
         "Load request registered successfully",
         None,
-        None,
+        Some(LoaderJobInQueue),
     ))
 }
 

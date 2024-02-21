@@ -6,6 +6,7 @@ use {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum LambdaDetailStatus {
     Timedout,
+    IOError,
     MaxLoadTaskQueueSizeLimitBreached,
     MaxConcurrentLoadLimitBreached,
     LoaderJobInQueue,
@@ -24,6 +25,7 @@ pub enum LambdaDetailStatus {
     LoaderJobFailedBecauseDependencyNotSatisfied,
     LoaderJobFailedInvalidRequest,
     LoaderJobStatusUnknown,
+    UserError,
 }
 
 impl LambdaDetailStatus {

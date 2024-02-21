@@ -153,10 +153,20 @@ impl From<DispatchFailure> for LambdaResponse {
         let cause = error.as_connector_error().unwrap();
         let msg = format!("Dispatch failure: {cause}");
         tracing::error!(msg);
+        let detail_status = if cause.is_timeout() {
+            LambdaDetailStatus::Timedout
+        } else if cause.is_io() {
+            LambdaDetailStatus::IOError
+        } else if cause.is_user() {
+            LambdaDetailStatus::UserError
+        } else {
+            LambdaDetailStatus::LoaderJobUnexpectedError
+        };
         Self {
             status_code: 500,
             message: msg,
             detailed_message: Some(format!("{}", cause.source().unwrap())),
+            detail_status: Some(detail_status),
             ..Default::default()
         }
     }
