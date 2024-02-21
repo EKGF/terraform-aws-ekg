@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.15](https://github.com/EKGF/terraform-neptune/compare/0.0.14..0.0.15) - 2024-02-21
+
+- - -
+
 ## [0.0.14](https://github.com/EKGF/terraform-neptune/compare/0.0.13..0.0.14) - 2024-02-21
 #### Features
 - added additional LambdaDetailStatus enums for DispatchFailures - ([8188fb6](https://github.com/EKGF/terraform-neptune/commit/8188fb6c2109def1b21cce14649d71be8db61162)) - [@jgeluk](https://github.com/jgeluk)
