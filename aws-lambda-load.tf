@@ -25,6 +25,8 @@ resource "aws_lambda_function" "load" {
       //
       EKG_API_BASE               = var.ekg_api_base
       //
+      EKG_PIPELINE_ID            = var.name
+      //
       EKG_SPARQL_LOADER_ENDPOINT = var.ekg_sparql_loader_endpoint
       EKG_SPARQL_HEALTH_ENDPOINT = var.ekg_sparql_health_endpoint
       EKG_SPARQL_QUERY_ENDPOINT  = var.ekg_sparql_query_endpoint

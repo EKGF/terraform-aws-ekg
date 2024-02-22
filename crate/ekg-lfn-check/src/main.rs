@@ -99,18 +99,18 @@ async fn handle_lambda_payload(
     }
     let load_request_id = load_request_id.unwrap();
 
-    match handle_lambda_request(&request, &clients.aws_neptunedata_client).await {
+    match handle_lambda_request(
+        &request,
+        &ekg_identifier_contexts,
+        pipeline_id,
+        load_request_id.as_str(),
+        clients.clone(),
+    )
+    .await
+    {
         Ok(mut response) => {
             response.clean();
             tracing::info!("Response: {:}", serde_json::to_string(&response)?);
-            register_load_request_status(
-                Ok(&response),
-                ekg_identifier_contexts,
-                pipeline_id,
-                load_request_id.as_str(),
-                clients.clone(),
-            )
-            .await?;
             Ok(response)
         },
         Err(error) => {
@@ -120,6 +120,7 @@ async fn handle_lambda_payload(
                 ekg_identifier_contexts,
                 pipeline_id,
                 load_request_id.as_str(),
+                None,
                 clients.clone(),
             )
             .await?;
@@ -134,7 +135,10 @@ async fn handle_lambda_payload(
 ///   this one.
 async fn handle_lambda_request(
     load_status_response: &LambdaResponse,
-    aws_neptunedata_client: &aws_sdk_neptunedata::Client,
+    ekg_identifier_contexts: &EkgIdentifierContexts,
+    pipeline_id: &'static str,
+    load_request_id: &str,
+    clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     let load_id = load_status_response
         .result_identifier
@@ -148,7 +152,8 @@ async fn handle_lambda_request(
         load_id
     );
 
-    let result = aws_neptunedata_client
+    let result = clients
+        .aws_neptunedata_client
         .get_loader_job_status()
         .load_id(load_id)
         .errors(true)
@@ -295,11 +300,26 @@ async fn handle_lambda_request(
             } else {
                 None
             };
-            Ok(LambdaResponse::ok(
+            // Don't want to use aws_sdk_unstable here (enabling serde support), so we'll
+            // just use the debug output to get the payload as a string and then parse that
+            // string back into a serde_json::Value
+            let payload_string = format!("{:?}", loader_job_status.payload().as_object());
+            let response = LambdaResponse::ok(
                 msg,
                 detailed_message.as_deref(),
                 Some(detail_status),
-            ))
+            );
+            register_load_request_status(
+                Ok(&response),
+                ekg_identifier_contexts,
+                pipeline_id,
+                load_request_id,
+                Some(payload_string),
+                clients.clone(),
+            )
+            .await?;
+
+            Ok(response)
         },
         Err(error) => Ok(error.into()),
     }
@@ -314,6 +334,7 @@ async fn register_load_request_status(
     ekg_identifier_contexts: &EkgIdentifierContexts,
     pipeline_id: &str,
     load_request_id: &str,
+    payload_string: Option<String>,
     clients: Clients,
 ) -> Result<(), LambdaError> {
     // TODO: the string "load-requests" should be based on the name of the terraform
@@ -359,6 +380,7 @@ async fn register_load_request_status(
                 GRAPH <{graph_load_requests}> {{
                     <{load_request_iri}> a dataops:LoadRequest .
                     <{load_request_iri}> a dataops:{load_request_type} .
+                    <{load_request_iri}> rdfs:comment """{payload_string}""" .
                 }}
             }}
             WHERE {{
@@ -369,8 +391,9 @@ async fn register_load_request_status(
             }}
         "#,
         graph_load_requests = graph_load_requests.as_str(),
-        load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
-        load_request_type = load_request_type
+        load_request_iri = format!("{}uuid:{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
+        load_request_type = load_request_type,
+        payload_string = payload_string.unwrap_or_default()
     };
     let statement = ekg_sparql::Statement::new(
         Prefixes::builder()

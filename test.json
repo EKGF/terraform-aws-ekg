@@ -22,7 +22,7 @@
         },
         {
           "Variable": "$.LoadOutput.detailStatus",
-          "StringEquals": "Timeout",
+          "StringEquals": "Timedout",
           "Next": "RetryLoadInstruction"
         },
         {

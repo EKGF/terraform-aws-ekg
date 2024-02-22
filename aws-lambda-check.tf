@@ -30,6 +30,7 @@ resource "aws_lambda_function" "check" {
       EKG_SPARQL_QUERY_ENDPOINT  = var.ekg_sparql_query_endpoint
       EKG_SPARQL_UPDATE_ENDPOINT = var.ekg_sparql_update_endpoint
       //
+      EKG_PIPELINE_ID            = var.name
       neptune_s3_iam_role_arn    = var.neptune_s3_iam_role_arn
       neptune_s3_bucket_region   = var.aws_region
     }

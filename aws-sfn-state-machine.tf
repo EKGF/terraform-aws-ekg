@@ -29,7 +29,7 @@ resource "aws_sfn_state_machine" "rdf_load" {
                   },
                   {
                       "Variable": "$.LoadOutput.detailStatus",
-                      "StringEquals": "Timeout",
+                      "StringEquals": "Timedout",
                       "Next": "RetryLoadInstruction"
                   },
                   {

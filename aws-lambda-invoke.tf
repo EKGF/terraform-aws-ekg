@@ -27,6 +27,8 @@ resource "aws_lambda_function" "invoke" {
       //
       EKG_API_BASE                  = var.ekg_api_base
       //
+      EKG_PIPELINE_ID               = var.name
+      //
       neptune_s3_iam_role_arn       = var.neptune_s3_iam_role_arn
       neptune_s3_bucket_region      = var.aws_region
       //

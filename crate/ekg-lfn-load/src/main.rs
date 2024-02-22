@@ -156,16 +156,17 @@ async fn handle_load_request_registration(
                     <{load_request_iri}> a dataops:LoadRequest ; a dataops:QueuedLoadRequest ;
                         rdfs:label "Queued load request for {s3_file}" ;
                         dataops:inPipeline <{pipeline_iri}> .
-                    <s3_iri> a dataops:Dataset ; a dataops:SingleGraphDataset ;
+                    <{s3_iri}> a dataops:Dataset ; a dataops:SingleGraphDataset ;
                         rdfs:label "S3 file {s3_file}" ;
                         dataops:loadedByLoadRequest <{load_request_iri}> .
                 }}
             }}
         "#,
         pipeline_id = pipeline_id,
-        pipeline_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), pipeline_id),
+        pipeline_iri = format!("{}dataops-pipeline-{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), pipeline_id),
         graph_load_requests = graph_load_requests.as_str(),
-        load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
+        load_request_iri = format!("{}uuid:{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
+        s3_iri = load_request.source,
         s3_file = load_request.source,
     };
     let statement = ekg_sparql::Statement::new(
