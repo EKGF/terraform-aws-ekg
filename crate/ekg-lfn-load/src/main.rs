@@ -3,6 +3,7 @@ use {
     ekg_aws_util::lambda::LambdaDetailStatus::LoaderJobInQueue,
     ekg_identifier::{NS_DATAOPS, NS_RDFS},
     ekg_sparql::Prefixes,
+    ekg_util::env::mandatory_env_var_static,
     std::ops::Deref,
 };
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
@@ -26,6 +27,7 @@ mod tests;
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
     ekg_util::tracing::aws_lfn_init();
+
     // Get the AWS SDK config
     let aws_sdk_config = ekg_aws_util::sdk_config::create().await?;
 
@@ -36,9 +38,10 @@ async fn main() -> Result<(), LambdaError> {
         // aws_sdk_neptunedata or aws_sdk_neptune crates, we had to build one ourselves)
         sparql_client:          ekg_sparql::SPARQLClient::from_env().await?,
     };
+    let pipeline_id = mandatory_env_var_static("EKG_PIPELINE_ID", None)?;
 
     // Call the actual handler of the request
-    let func = service_fn(move |req| handle_lambda_event(req, clients.clone()));
+    let func = service_fn(move |req| handle_lambda_event(req, pipeline_id, clients.clone()));
     lambda_runtime::run(func).await?;
     Ok(())
 }
@@ -47,17 +50,19 @@ async fn main() -> Result<(), LambdaError> {
 /// The actual handler of the Lambda request.
 async fn handle_lambda_event(
     event: LambdaEvent<Value>,
+    pipeline_id: &'static str,
     clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     tracing::trace!("Event {:#?}\n\n", event.clone());
 
     let (payload, _ctx) = event.into_parts();
 
-    handle_lambda_payload(payload, clients).await
+    handle_lambda_payload(payload, pipeline_id, clients).await
 }
 
 async fn handle_lambda_payload(
     payload: Value,
+    pipeline_id: &'static str,
     clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     tracing::trace!(
@@ -65,12 +70,12 @@ async fn handle_lambda_payload(
         serde_json::to_string_pretty(&payload)?
     );
 
-    let request = serde_json::from_value::<crate::Request>(payload).map_err(|e| {
+    let request = serde_json::from_value::<Request>(payload).map_err(|e| {
         tracing::error!("Error parsing request: {}", e);
         e
     })?;
 
-    match handle_lambda_request(&request, clients).await {
+    match handle_lambda_request(&request, pipeline_id, clients).await {
         Ok(mut response) => {
             response.clean();
             tracing::info!("Response: {:}", serde_json::to_string(&response)?);
@@ -85,19 +90,27 @@ async fn handle_lambda_payload(
 
 async fn handle_lambda_request(
     request: &crate::Request,
+    pipeline_id: &'static str,
     clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     let identifier_contexts = EkgIdentifierContexts::from_env()?;
     let load_request = &request.load_request;
+    if request.pipeline_id != pipeline_id {
+        return Ok(LambdaResponse::pipeline_id_not_matching(
+            request.pipeline_id.as_str(),
+            pipeline_id,
+        ));
+    }
 
     // First, initiate the load request using the NeptuneData API which gives us
     // a load request ID
-    let result = handle_load_request(load_request, clients.clone()).await?;
+    let result = handle_load_request(load_request, pipeline_id, clients.clone()).await?;
     if let Some(result_identifier) = &result.result_identifier {
         tracing::info!("Load request ID: {:?}", result_identifier);
         // First, register the load request in the database itself using SPARQL
         handle_load_request_registration(
             load_request,
+            pipeline_id,
             result_identifier.as_str(),
             &identifier_contexts,
             clients.clone(),
@@ -111,6 +124,7 @@ async fn handle_lambda_request(
 /// itself.
 async fn handle_load_request_registration(
     load_request: &LoadRequest,
+    pipeline_id: &str,
     load_request_id: &str,
     ekg_identifier_contexts: &EkgIdentifierContexts,
     clients: Clients,
@@ -118,12 +132,13 @@ async fn handle_load_request_registration(
     // TODO: the string "load-requests" should be based on the name of the terraform
     // module
     let graph_load_requests = format!(
-        "{}{}",
+        "{}{}-{}",
         ekg_identifier_contexts
             .internal
             .ekg_graph_base
             .as_base_iri(),
-        "load-requests"
+        "load-requests",
+        pipeline_id
     );
 
     tracing::info!(
@@ -134,17 +149,21 @@ async fn handle_load_request_registration(
 
     let sparql = formatdoc! {
         r#"
-            {prefix_dataops}
-            {prefix_rdfs}
             INSERT DATA {{
                 GRAPH <{graph_load_requests}> {{
-                    <{load_request_iri}> a dataops:LoadRequest ;
-                        rdfs:label "Load request for {s3_file}" .
+                    <{pipeline_iri}> a dataops:Pipeline ;
+                        rdfs:label "Pipeline {pipeline_id}" .
+                    <{load_request_iri}> a dataops:LoadRequest ; a dataops:QueuedLoadRequest ;
+                        rdfs:label "Queued load request for {s3_file}" ;
+                        dataops:inPipeline <{pipeline_iri}> .
+                    <s3_iri> a dataops:Dataset ; a dataops:SingleGraphDataset ;
+                        rdfs:label "S3 file {s3_file}" ;
+                        dataops:loadedByLoadRequest <{load_request_iri}> .
                 }}
             }}
         "#,
-        prefix_dataops = NS_DATAOPS.as_sparql_prefix(),
-        prefix_rdfs = NS_RDFS.as_sparql_prefix(),
+        pipeline_id = pipeline_id,
+        pipeline_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), pipeline_id),
         graph_load_requests = graph_load_requests.as_str(),
         load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
         s3_file = load_request.source,
@@ -169,11 +188,13 @@ async fn handle_load_request_registration(
 /// Initiate the load request using the NeptuneData API.
 async fn handle_load_request(
     load_request: &LoadRequest,
+    pipeline_id: &str,
     clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     tracing::info!(
-        "Load request for RDF file {:}",
-        load_request.source
+        "Load request for RDF file {:} (pipeline {:})",
+        load_request.source,
+        pipeline_id
     );
 
     let result = clients

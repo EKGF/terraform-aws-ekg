@@ -22,6 +22,7 @@ aws-smithy-runtime-api.workspace = true
 aws-sdk-neptunedata.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+indoc.workspace = true
 config.workspace = true
 tokio.workspace = true
 unreachable.workspace = true
@@ -31,6 +32,7 @@ ekg-identifier.workspace = true
 ekg-util.workspace = true
 ekg-aws-util.workspace = true
 ekg-lfn-load.workspace = true
+ekg-sparql.workspace = true
 
 [dev-dependencies]
 test-log.workspace = true

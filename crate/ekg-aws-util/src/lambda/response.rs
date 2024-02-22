@@ -79,6 +79,21 @@ impl LambdaResponse {
         }
     }
 
+    pub fn pipeline_id_not_matching(
+        received_pipeline_id: &str,
+        required_pipeline_id: &str,
+    ) -> Self {
+        Self {
+            status_code: 400,
+            message: format!(
+                "Pipeline ID not matching (received: {}, required: {}",
+                received_pipeline_id, required_pipeline_id
+            ),
+            detail_status: Some(LambdaDetailStatus::PipelineIdNotMatching),
+            ..Default::default()
+        }
+    }
+
     pub fn ok(
         message: &str,
         detailed_message: Option<&str>,

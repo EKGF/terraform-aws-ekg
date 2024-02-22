@@ -5,6 +5,7 @@ use {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum LambdaDetailStatus {
+    PipelineIdNotMatching,
     Timedout,
     IOError,
     MaxLoadTaskQueueSizeLimitBreached,

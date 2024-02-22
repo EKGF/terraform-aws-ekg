@@ -1,11 +1,22 @@
 /// See https://github.com/awslabs/aws-lambda-rust-runtime for more info on Rust runtime for AWS Lambda
 use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
 use {
-    ekg_aws_util::lambda::{LambdaDetailStatus, LambdaResponse},
+    clients::Clients,
+    ekg_aws_util::lambda::{
+        LambdaDetailStatus::{self},
+        LambdaResponse,
+    },
+    ekg_identifier::{EkgIdentifierContexts, NS_DATAOPS, NS_RDFS},
+    ekg_sparql::Prefixes,
+    ekg_util::env::mandatory_env_var_static,
+    indoc::formatdoc,
     serde_json::Value,
+    std::ops::Deref,
 };
 
 mod request;
+
+mod clients;
 
 #[cfg(test)]
 mod tests;
@@ -14,12 +25,18 @@ mod tests;
 async fn main() -> Result<(), LambdaError> {
     ekg_util::tracing::aws_lfn_init();
     // Get the AWS config
-    let aws_config = aws_config::load_from_env().await;
-    // Create the NeptuneData client
-    let aws_neptunedata_client = ekg_aws_util::neptune::get_neptunedata_client(&aws_config)?;
+    let aws_sdk_config = ekg_aws_util::sdk_config::create().await?;
+    let clients = Clients {
+        // Create the NeptuneData client
+        aws_neptunedata_client: ekg_aws_util::neptune::get_neptunedata_client(&aws_sdk_config)?,
+        // Create the HTTP SPARQL client (which strangely enough is not part of the
+        // aws_sdk_neptunedata or aws_sdk_neptune crates, we had to build one ourselves)
+        sparql_client:          ekg_sparql::SPARQLClient::from_env().await?,
+    };
+    let pipeline_id = mandatory_env_var_static("EKG_PIPELINE_ID", None)?;
 
     // Call the actual handler of the request
-    let func = service_fn(move |req| handle_lambda_event(req, aws_neptunedata_client.clone()));
+    let func = service_fn(move |req| handle_lambda_event(req, pipeline_id, clients.clone()));
     lambda_runtime::run(func).await?;
     Ok(())
 }
@@ -28,18 +45,29 @@ async fn main() -> Result<(), LambdaError> {
 /// The actual handler of the Lambda request.
 async fn handle_lambda_event(
     event: LambdaEvent<Value>,
-    aws_neptunedata_client: aws_sdk_neptunedata::Client,
+    pipeline_id: &'static str,
+    clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     tracing::trace!("Event {:#?}\n\n", event.clone());
 
+    let ekg_identifier_contexts = EkgIdentifierContexts::from_env()?;
+
     let (payload, _ctx) = event.into_parts();
 
-    handle_lambda_payload(payload, aws_neptunedata_client).await
+    handle_lambda_payload(
+        payload,
+        &ekg_identifier_contexts,
+        pipeline_id,
+        clients,
+    )
+    .await
 }
 
 async fn handle_lambda_payload(
     payload: Value,
-    aws_neptunedata_client: aws_sdk_neptunedata::Client,
+    ekg_identifier_contexts: &EkgIdentifierContexts,
+    pipeline_id: &'static str,
+    clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     tracing::info!(
         "Payload {}",
@@ -63,16 +91,39 @@ async fn handle_lambda_payload(
         tracing::error!("Error parsing request: {}", e);
         e
     })?;
+    let load_request_id = request.result_identifier.as_ref();
+    if load_request_id.is_none() {
+        return Err(LambdaError::from(
+            "Missing result_identifier in request",
+        ));
+    }
+    let load_request_id = load_request_id.unwrap();
 
-    match handle_lambda_request(&request, aws_neptunedata_client).await {
+    match handle_lambda_request(&request, &clients.aws_neptunedata_client).await {
         Ok(mut response) => {
             response.clean();
             tracing::info!("Response: {:}", serde_json::to_string(&response)?);
+            register_load_request_status(
+                Ok(&response),
+                ekg_identifier_contexts,
+                pipeline_id,
+                load_request_id.as_str(),
+                clients.clone(),
+            )
+            .await?;
             Ok(response)
         },
         Err(error) => {
             tracing::error!("Error handling request: {:?}", error);
-            Err(error.into())
+            register_load_request_status(
+                Err(&error),
+                ekg_identifier_contexts,
+                pipeline_id,
+                load_request_id.as_str(),
+                clients.clone(),
+            )
+            .await?;
+            Err(error)
         },
     }
 }
@@ -82,10 +133,10 @@ async fn handle_lambda_payload(
 /// - `request`: The output of the ekg_lfn_load Lambda function is the input to
 ///   this one.
 async fn handle_lambda_request(
-    request: &LambdaResponse,
-    aws_neptunedata_client: aws_sdk_neptunedata::Client,
+    load_status_response: &LambdaResponse,
+    aws_neptunedata_client: &aws_sdk_neptunedata::Client,
 ) -> Result<LambdaResponse, LambdaError> {
-    let load_id = request
+    let load_id = load_status_response
         .result_identifier
         .as_deref()
         .ok_or(LambdaError::from(
@@ -252,4 +303,91 @@ async fn handle_lambda_request(
         },
         Err(error) => Ok(error.into()),
     }
+}
+
+/// After we checked Neptune for the load status, we need to register that
+/// status back into the database (if at all possible, if the result of the load
+/// status check points out that there's a problem with the database we may not
+/// be able to update the status).
+async fn register_load_request_status(
+    check_result: Result<&LambdaResponse, &LambdaError>,
+    ekg_identifier_contexts: &EkgIdentifierContexts,
+    pipeline_id: &str,
+    load_request_id: &str,
+    clients: Clients,
+) -> Result<(), LambdaError> {
+    // TODO: the string "load-requests" should be based on the name of the terraform
+    //       module
+    let graph_load_requests = format!(
+        "{}{}-{}",
+        ekg_identifier_contexts
+            .internal
+            .ekg_graph_base
+            .as_base_iri(),
+        "load-requests",
+        pipeline_id
+    );
+
+    tracing::info!(
+        "Load request status registration for load request {} in pipeline {}",
+        load_request_id,
+        pipeline_id
+    );
+
+    let load_request_type = match check_result {
+        Ok(response) => {
+            match response.detail_status {
+                Some(LambdaDetailStatus::LoaderJobInQueue) => "QueuedLoadRequest",
+                Some(LambdaDetailStatus::LoaderJobNotStarted) => "QueuedLoadRequest",
+                Some(LambdaDetailStatus::LoaderJobInProgress) => "LoadingLoadRequest",
+                Some(LambdaDetailStatus::LoaderJobCompleted) => "FinishedLoadRequest",
+                _ => "FailedLoadRequest",
+            }
+        },
+        Err(_) => "FailedLoadRequest",
+    };
+
+    let sparql = formatdoc! {
+        r#"
+            DELETE {{
+                GRAPH <{graph_load_requests}> {{
+                    <{load_request_iri}> a ?loadRequestType .
+                    <{load_request_iri}> rdfs:label ?loadRequestLabel .
+                }}
+            }}
+            INSERT {{
+                GRAPH <{graph_load_requests}> {{
+                    <{load_request_iri}> a dataops:LoadRequest .
+                    <{load_request_iri}> a dataops:{load_request_type} .
+                }}
+            }}
+            WHERE {{
+                GRAPH <{graph_load_requests}> {{
+                    <{load_request_iri}> a ?loadRequestType .
+                    <{load_request_iri}> rdfs:label ?loadRequestLabel .
+                }}
+            }}
+        "#,
+        graph_load_requests = graph_load_requests.as_str(),
+        load_request_iri = format!("{}{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
+        load_request_type = load_request_type
+    };
+    let statement = ekg_sparql::Statement::new(
+        Prefixes::builder()
+            .declare(NS_DATAOPS.deref())
+            .declare(NS_RDFS.deref())
+            .build()?,
+        std::borrow::Cow::Borrowed(sparql.as_str()),
+    )?;
+
+    clients.sparql_client.execute(&statement).await?;
+
+    tracing::info!(
+        "Load request status \"{}\" registered for load request {} in pipeline {}",
+        load_request_type,
+        load_request_id,
+        pipeline_id
+    );
+
+    Ok(())
 }

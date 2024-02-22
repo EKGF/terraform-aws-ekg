@@ -52,11 +52,11 @@ ekg-lfn-load = { path = "crate/ekg-lfn-load" }
 #
 # other ekg crates
 #
-ekg-error = { version = "0.0.16", default-features = false, features = ["iref", "serde", "aws-lambda-runtime", "tracing-subscriber"] }
-ekg-identifier = { version = "0.0.16", default-features = false, features = [] }
-ekg-metadata = { version = "0.0.16", default-features = false, features = ["serde"] }
-ekg-sparql = { version = "0.0.16", default-features = false, features = [] }
-ekg-util = { version = "0.0.16", default-features = false, features = [] }
+ekg-error = { version = "0.0.17", default-features = false, features = ["iref", "serde", "aws-lambda-runtime", "tracing-subscriber"] }
+ekg-identifier = { version = "0.0.17", default-features = false, features = [] }
+ekg-metadata = { version = "0.0.17", default-features = false, features = ["serde"] }
+ekg-sparql = { version = "0.0.17", default-features = false, features = [] }
+ekg-util = { version = "0.0.17", default-features = false, features = [] }
 #
 # Tracing & Logging
 #

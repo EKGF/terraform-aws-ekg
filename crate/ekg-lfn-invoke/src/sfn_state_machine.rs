@@ -10,7 +10,7 @@ impl StateMachine {
     pub async fn start_execution(
         &self,
         state_machine_arn: &str,
-        input: &serde_json::Value,
+        input: serde_json::Value,
     ) -> Result<(), Error> {
         let output = self
             .aws_sfn_client
