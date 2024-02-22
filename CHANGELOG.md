@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.16](https://github.com/EKGF/terraform-neptune/compare/0.0.15..0.0.16) - 2024-02-22
+#### Features
+- more detailed load-request status updates - ([cde3681](https://github.com/EKGF/terraform-neptune/commit/cde3681bccc6b05c9bc2d4ea80a104aeb7c84acf)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.15](https://github.com/EKGF/terraform-neptune/compare/0.0.14..0.0.15) - 2024-02-21
 
 - - -
