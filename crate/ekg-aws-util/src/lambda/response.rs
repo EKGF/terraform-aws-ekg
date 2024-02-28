@@ -31,8 +31,7 @@ pub struct LambdaResponse {
     pub message:                 String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detailed_message:        Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail_status:           Option<LambdaDetailStatus>,
+    pub detail_status:           LambdaDetailStatus,
     /// A generic slot that can be used to pass back a result identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result_identifier:       Option<String>,
@@ -89,25 +88,33 @@ impl LambdaResponse {
                 "Pipeline ID not matching (received: {}, required: {}",
                 received_pipeline_id, required_pipeline_id
             ),
-            detail_status: Some(LambdaDetailStatus::PipelineIdNotMatching),
+            detail_status: LambdaDetailStatus::PipelineIdNotMatching,
             ..Default::default()
         }
     }
 
-    pub fn ok(
-        message: &str,
-        detailed_message: Option<&str>,
-        detail_status: Option<LambdaDetailStatus>,
-    ) -> Self {
-        tracing::info!(message);
-        Self {
+    pub fn ok(detail_status: LambdaDetailStatus, detailed_message: Option<&str>) -> Self {
+        let retryable = detail_status.is_retryable();
+        tracing::info!(
+            "{}{}{}",
+            &detail_status.message(),
+            if retryable { " (will retry later)" } else { "" },
+            detailed_message
+                .map(|s| format!(", {}", s))
+                .unwrap_or_default()
+        );
+        let response = Self {
             status_code: 200,
-            message: message.to_string(),
+            message: detail_status.message().to_string(),
             detailed_message: detailed_message.map(|s| s.to_string()),
             detail_status,
             ..Default::default()
+        };
+        if retryable {
+            response.retryable()
+        } else {
+            response
         }
-        .retryable()
     }
 }
 
@@ -120,7 +127,8 @@ impl From<&BadRequestException> for LambdaResponse {
                 .clone()
                 .unwrap_or("unknown message".to_string()),
             detailed_message: Some(error.detailed_message.clone()),
-            detail_status: LambdaDetailStatus::from_bad_request_exception(error),
+            detail_status: LambdaDetailStatus::from_bad_request_exception(error)
+                .unwrap_or(LambdaDetailStatus::UserError),
             ..Default::default()
         }
     }
@@ -156,7 +164,7 @@ impl From<TimeoutError> for LambdaResponse {
         Self {
             status_code: 504,
             message: msg,
-            detail_status: Some(LambdaDetailStatus::Timedout),
+            detail_status: LambdaDetailStatus::Timedout,
             ..Default::default()
         }
         .retryable()
@@ -181,7 +189,7 @@ impl From<DispatchFailure> for LambdaResponse {
             status_code: 500,
             message: msg,
             detailed_message: Some(format!("{}", cause.source().unwrap())),
-            detail_status: Some(detail_status),
+            detail_status,
             ..Default::default()
         }
     }
@@ -252,7 +260,8 @@ impl From<BadRequestException> for LambdaResponse {
                 .clone()
                 .unwrap_or("unknown message".to_string()),
             detailed_message: Some(error.detailed_message.clone()),
-            detail_status: LambdaDetailStatus::from_bad_request_exception(&error),
+            detail_status: LambdaDetailStatus::from_bad_request_exception(&error)
+                .unwrap_or(LambdaDetailStatus::UserError),
             ..Default::default()
         }
     }
@@ -265,6 +274,8 @@ impl From<&StartLoaderJobOutput> for LambdaResponse {
             status_code: 200,
             message: "Loader job started successfully".to_string(),
             result_identifier: load_id,
+            detail_status: LambdaDetailStatus::LoaderJobInQueue,
+            suggested_retry_seconds: None,
             ..Default::default()
         }
     }

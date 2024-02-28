@@ -1,4 +1,5 @@
-pub use {response::LambdaResponse, status::LambdaDetailStatus};
+pub use {classes::*, response::LambdaResponse, status::LambdaDetailStatus};
 
+mod classes;
 mod response;
 mod status;

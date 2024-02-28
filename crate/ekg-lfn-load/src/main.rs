@@ -180,9 +180,8 @@ async fn handle_load_request_registration(
     clients.sparql_client.execute(&statement).await?;
 
     Ok(LambdaResponse::ok(
-        "Load request registered successfully",
-        None,
-        Some(LoaderJobInQueue),
+        LoaderJobInQueue,
+        Some("Load request registered successfully"),
     ))
 }
 

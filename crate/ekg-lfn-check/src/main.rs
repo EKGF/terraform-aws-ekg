@@ -3,10 +3,18 @@ use lambda_runtime::{service_fn, Error as LambdaError, LambdaEvent};
 use {
     clients::Clients,
     ekg_aws_util::lambda::{
+        default_load_request_label,
         LambdaDetailStatus::{self},
         LambdaResponse,
+        CLASS_DATAOPS_LOAD_REQUEST,
     },
-    ekg_identifier::{EkgIdentifierContexts, NS_DATAOPS, NS_RDFS},
+    ekg_identifier::{
+        EkgIdentifierContexts,
+        NS_DATAOPS,
+        NS_PREFIX_DATAOPS,
+        NS_PREFIX_RDFS,
+        NS_RDFS,
+    },
     ekg_sparql::Prefixes,
     ekg_util::env::mandatory_env_var_static,
     indoc::formatdoc,
@@ -99,11 +107,26 @@ async fn handle_lambda_payload(
     }
     let load_request_id = load_request_id.unwrap();
 
+    let source_iri = payload
+        .as_object()
+        .ok_or(LambdaError::from("Payload is not an object"))?
+        .get("load_request")
+        .ok_or(LambdaError::from(
+            "Missing load_request in payload",
+        ))?
+        .as_object()
+        .ok_or(LambdaError::from("load_request is not an object"))?
+        .get("source")
+        .ok_or(LambdaError::from("source is not a string"))?
+        .as_str()
+        .ok_or(LambdaError::from("source is not a string"))?;
+
     match handle_lambda_request(
         &request,
         &ekg_identifier_contexts,
         pipeline_id,
         load_request_id.as_str(),
+        source_iri,
         clients.clone(),
     )
     .await
@@ -120,6 +143,7 @@ async fn handle_lambda_payload(
                 ekg_identifier_contexts,
                 pipeline_id,
                 load_request_id.as_str(),
+                source_iri,
                 None,
                 clients.clone(),
             )
@@ -138,6 +162,7 @@ async fn handle_lambda_request(
     ekg_identifier_contexts: &EkgIdentifierContexts,
     pipeline_id: &'static str,
     load_request_id: &str,
+    source_iri: &str,
     clients: Clients,
 ) -> Result<LambdaResponse, LambdaError> {
     let load_id = load_status_response
@@ -169,131 +194,18 @@ async fn handle_lambda_request(
                 .get("overallStatus");
             if overall_status.is_none() {
                 return Ok(LambdaResponse::ok(
-                    "Missing overallStatus in loader job status",
-                    None,
-                    Some(LambdaDetailStatus::LoaderJobStatusUnknown),
+                    LambdaDetailStatus::LoaderJobStatusUnknown,
+                    Some("Missing overallStatus field in loader job status"),
                 ));
             }
-            let status = overall_status.unwrap().as_object().unwrap()["status"]
+            let loader_job_status_str = overall_status.unwrap().as_object().unwrap()["status"]
                 .as_string()
                 .unwrap();
-            let (msg, detail_status, show_detail) = match status {
-                "LOAD_IN_QUEUE" => {
-                    (
-                        "Loader job is still in the queue",
-                        LambdaDetailStatus::LoaderJobInQueue,
-                        false,
-                    )
-                },
-                "LOAD_NOT_STARTED" => {
-                    (
-                        "Loader job has not started yet",
-                        LambdaDetailStatus::LoaderJobNotStarted,
-                        false,
-                    )
-                },
-                "LOAD_IN_PROGRESS" => {
-                    (
-                        "Loader job is still in progress",
-                        LambdaDetailStatus::LoaderJobInProgress,
-                        false,
-                    )
-                },
-                "LOAD_COMPLETED" => {
-                    (
-                        "Loader job completed",
-                        LambdaDetailStatus::LoaderJobCompleted,
-                        true,
-                    )
-                },
-                "LOAD_CANCELLED_BY_USER" => {
-                    (
-                        "Loader job cancelled by user",
-                        LambdaDetailStatus::LoaderJobCancelledByUser,
-                        true,
-                    )
-                },
-                "LOAD_CANCELLED_DUE_TO_ERRORS" => {
-                    (
-                        "Loader job cancelled due to errors",
-                        LambdaDetailStatus::LoaderJobCancelledDueToErrors,
-                        true,
-                    )
-                },
-                "LOAD_UNEXPECTED_ERROR" => {
-                    (
-                        "Loader job failed due to unexpected error",
-                        LambdaDetailStatus::LoaderJobUnexpectedError,
-                        true,
-                    )
-                },
-                "LOAD_FAILED" => {
-                    (
-                        "Loader job failed",
-                        LambdaDetailStatus::LoaderJobFailed,
-                        true,
-                    )
-                },
-                "LOAD_S3_READ_ERROR" => {
-                    (
-                        "Loader job failed due to S3 read error",
-                        LambdaDetailStatus::LoaderJobS3ReadError,
-                        true,
-                    )
-                },
-                "LOAD_S3_ACCESS_DENIED_ERROR" => {
-                    (
-                        "Loader job failed due to S3 access denied error",
-                        LambdaDetailStatus::LoaderJobS3AccessDeniedError,
-                        true,
-                    )
-                },
-                "LOAD_COMMITTED_W_WRITE_CONFLICTS" => {
-                    (
-                        "Loader job failed due to write conflicts",
-                        LambdaDetailStatus::LoaderJobCommittedWithWriteConflicts,
-                        true,
-                    )
-                },
-                "LOAD_DATA_DEADLOCK" => {
-                    (
-                        "Loader job failed due to data deadlock",
-                        LambdaDetailStatus::LoaderJobDataDeadlock,
-                        true,
-                    )
-                },
-                "LOAD_DATA_FAILED_DUE_TO_FEED_MODIFIED_OR_DELETED" => {
-                    (
-                        "Loader job failed because file was deleted or updated after load start.",
-                        LambdaDetailStatus::LoaderJobDataFailedDueToFeedModifiedOrDeleted,
-                        true,
-                    )
-                },
-                "LOAD_FAILED_BECAUSE_DEPENDENCY_NOT_SATISFIED" => {
-                    (
-                        "Loader job failed because dependency was not satisfied.",
-                        LambdaDetailStatus::LoaderJobFailedBecauseDependencyNotSatisfied,
-                        true,
-                    )
-                },
-                "LOAD_FAILED_INVALID_REQUEST" => {
-                    (
-                        "Loader job failed due to invalid request",
-                        LambdaDetailStatus::LoaderJobFailedInvalidRequest,
-                        true,
-                    )
-                },
-                _ => {
-                    (
-                        "Loader job status unknown",
-                        LambdaDetailStatus::LoaderJobStatusUnknown,
-                        true,
-                    )
-                },
-            };
-            let detailed_message = if show_detail {
+            let status = LambdaDetailStatus::from_loader_job_status(loader_job_status_str);
+            let detailed_message = if status.should_show_detail() {
                 Some(format!(
-                    "Loader job status is {} with payload {:?}",
+                    "Loader job status for {} is {} with payload {:?}",
+                    source_iri,
                     loader_job_status.status(),
                     loader_job_status.payload()
                 ))
@@ -304,16 +216,13 @@ async fn handle_lambda_request(
             // just use the debug output to get the payload as a string and then parse that
             // string back into a serde_json::Value
             let payload_string = format!("{:?}", loader_job_status.payload().as_object());
-            let response = LambdaResponse::ok(
-                msg,
-                detailed_message.as_deref(),
-                Some(detail_status),
-            );
+            let response = LambdaResponse::ok(status, detailed_message.as_deref());
             register_load_request_status(
                 Ok(&response),
                 ekg_identifier_contexts,
                 pipeline_id,
                 load_request_id,
+                source_iri,
                 Some(payload_string),
                 clients.clone(),
             )
@@ -334,6 +243,7 @@ async fn register_load_request_status(
     ekg_identifier_contexts: &EkgIdentifierContexts,
     pipeline_id: &str,
     load_request_id: &str,
+    source_iri: &str,
     payload_string: Option<String>,
     clients: Clients,
 ) -> Result<(), LambdaError> {
@@ -350,49 +260,59 @@ async fn register_load_request_status(
     );
 
     tracing::info!(
-        "Load request status registration for load request {} in pipeline {}",
+        "Load request status registration for load request {} in pipeline {} for source IRI {}",
         load_request_id,
-        pipeline_id
+        pipeline_id,
+        source_iri
     );
 
     let load_request_type = match check_result {
-        Ok(response) => {
-            match response.detail_status {
-                Some(LambdaDetailStatus::LoaderJobInQueue) => "QueuedLoadRequest",
-                Some(LambdaDetailStatus::LoaderJobNotStarted) => "QueuedLoadRequest",
-                Some(LambdaDetailStatus::LoaderJobInProgress) => "LoadingLoadRequest",
-                Some(LambdaDetailStatus::LoaderJobCompleted) => "FinishedLoadRequest",
-                _ => "FailedLoadRequest",
-            }
-        },
-        Err(_) => "FailedLoadRequest",
+        Ok(response) => response.detail_status.rdf_class(),
+        Err(_) => LambdaDetailStatus::LoaderJobStatusUnknown.rdf_class(),
     };
 
     let sparql = formatdoc! {
         r#"
+            WITH <{graph_load_requests}>
             DELETE {{
-                GRAPH <{graph_load_requests}> {{
-                    <{load_request_iri}> a ?loadRequestType .
-                    <{load_request_iri}> rdfs:label ?loadRequestLabel .
-                }}
+                ?loadRequest a {load_request_type} .
+                ?loadRequest a ?loadRequestType .
+                ?loadRequest {rdfs}label ?loadRequestLabel .
+                ?loadRequest {dataops}source ?loadRequestSource .
+                ?loadRequest {dataops}graph ?loadRequestGraph .
             }}
             INSERT {{
-                GRAPH <{graph_load_requests}> {{
-                    <{load_request_iri}> a dataops:LoadRequest .
-                    <{load_request_iri}> a dataops:{load_request_type} .
-                    <{load_request_iri}> rdfs:comment """{payload_string}""" .
-                }}
+                ?loadRequest a {load_request_type} .
+                ?loadRequest a {load_request_status_type} .
+                ?loadRequest {rdfs}label "{load_request_label}" .
+                ?loadRequest {rdfs}comment """{payload_string}""" .
+                ?loadRequest {dataops}source <{source_iri}> .
+                ?loadRequest {dataops}graph <{source_iri}> .
             }}
             WHERE {{
-                GRAPH <{graph_load_requests}> {{
-                    <{load_request_iri}> a ?loadRequestType .
-                    <{load_request_iri}> rdfs:label ?loadRequestLabel .
+                VALUES ?loadRequest {{
+                    <{load_request_iri}>
+                }}
+                ?loadRequest a {load_request_type} .
+                ?loadRequest a ?loadRequestType .
+                OPTIONAL {{
+                    ?loadRequest {dataops}source ?loadRequestSource .
+                }}
+                OPTIONAL {{
+                    ?loadRequest {dataops}graph ?loadRequestGraph .
+                }}
+                OPTIONAL {{
+                    ?loadRequest {rdfs}label ?loadRequestLabel .
                 }}
             }}
         "#,
+        dataops = NS_PREFIX_DATAOPS,
+        rdfs = NS_PREFIX_RDFS,
         graph_load_requests = graph_load_requests.as_str(),
         load_request_iri = format!("{}uuid:{}", ekg_identifier_contexts.internal.ekg_id_base.as_base_iri(), load_request_id),
-        load_request_type = load_request_type,
+        load_request_type = CLASS_DATAOPS_LOAD_REQUEST.display_turtle(),
+        load_request_status_type = load_request_type.display_turtle(),
+        load_request_label = default_load_request_label(load_request_type, load_request_id, source_iri),
         payload_string = payload_string.unwrap_or_default()
     };
     let statement = ekg_sparql::Statement::new(
