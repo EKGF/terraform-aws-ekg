@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.18](https://github.com/EKGF/terraform-neptune/compare/0.0.17..0.0.18) - 2024-02-28
+#### Features
+- added more detail to  info that's updated in Neptune during loads - ([f3b041b](https://github.com/EKGF/terraform-neptune/commit/f3b041ba0eff1095d243455f80c79f9d04f20aa1)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.17](https://github.com/EKGF/terraform-neptune/compare/0.0.16..0.0.17) - 2024-02-22
 #### Features
 - more details in load request status updates that are written back to neptune - ([2386597](https://github.com/EKGF/terraform-neptune/commit/2386597c8bd82dbf87b70b14ae1c89042e95a21c)) - [@jgeluk](https://github.com/jgeluk)
