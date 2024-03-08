@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.0.19](https://github.com/EKGF/terraform-neptune/compare/0.0.18..0.0.19) - 2024-03-08
+#### Features
+- increased connect timeout to Neptune from 3 to 10 seconds - ([bd91548](https://github.com/EKGF/terraform-neptune/commit/bd91548ab9901067f6cab9caa2b8e046a4a3ca43)) - [@jgeluk](https://github.com/jgeluk)
+
+- - -
+
 ## [0.0.18](https://github.com/EKGF/terraform-neptune/compare/0.0.17..0.0.18) - 2024-02-28
 #### Features
 - added more detail to  info that's updated in Neptune during loads - ([f3b041b](https://github.com/EKGF/terraform-neptune/commit/f3b041ba0eff1095d243455f80c79f9d04f20aa1)) - [@jgeluk](https://github.com/jgeluk)
