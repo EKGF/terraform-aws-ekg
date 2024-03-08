@@ -4,6 +4,7 @@ pub async fn create() -> Result<SdkConfig, ekg_error::Error> {
     let hyper_client = crate::http::hyper_client_builder().await?;
 
     let timeout_config = timeout::TimeoutConfig::builder()
+        .connect_timeout(std::time::Duration::from_secs(10))
         .operation_timeout(std::time::Duration::from_secs(60 * 10))
         .operation_attempt_timeout(std::time::Duration::from_secs(60))
         .build();
